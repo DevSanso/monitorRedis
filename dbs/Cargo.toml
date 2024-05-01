@@ -1,0 +1,10 @@
+[package]
+name = "dbs"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+postgres = "0.19.7"
+redis = "0.25.3"
+
+core = {path = "../core"}
