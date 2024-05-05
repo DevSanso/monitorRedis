@@ -40,7 +40,7 @@ impl RedisRequester {
         }
     }
 
-    pub fn parsing_args(&self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String,Box<dyn Error>> {
+    fn parsing_args(&self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String,Box<dyn Error>> {
         if args.len() != command.matches("?").count() {
             return Err(Box::new(NotMatchArgsLenError));
         }

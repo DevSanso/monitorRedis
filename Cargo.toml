@@ -3,5 +3,7 @@ members = [
     "core",
     "logger",
     "dbs",
-    "dbs_cmd"
+    "dbs_cmd",
+    "collect_server",
+    "parsing"
 ]

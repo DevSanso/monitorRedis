@@ -13,6 +13,10 @@ fn get_redis_command_json_file() -> Vec<u8> {
     include_bytes!("../assets/command/redis.json").to_vec()
 }
 
+fn get_pg_command_json_file() -> Vec<u8> {
+    include_bytes!("../assets/command/pg.json").to_vec()
+}
+
 fn write_link_submod(root_mod: &mut Vec<u8>, sub_mod: &'_ str) {
     write!(root_mod, "pub mod {};\n", sub_mod);
 }
@@ -74,7 +78,7 @@ fn create_static_hashmap(
 ) -> String {
     let mut ret = String::new();
     let define = format!(
-        "static {} : once_cell::sync::Lazy<HashMap<{}, &'_ str>>",
+        "pub static {} : once_cell::sync::Lazy<HashMap<{}, &'_ str>>",
         str::to_uppercase(hashmap_name),
         enum_name
     );
@@ -121,6 +125,28 @@ fn get_redis_command_code() -> Result<(String, String), Box<dyn std::error::Erro
     Ok((enum_code, map_code))
 }
 
+fn get_pg_command_code() -> Result<(String, String), Box<dyn std::error::Error>> {
+    const ENUM_NAME: &'static str = "PgCommand";
+    const MAP_NAME: &'static str = "PG_COMMANDLINE_MAP";
+
+    let pg_data = get_pg_command_json_file();
+    let cmds: Vec<HashMap<String, Vec<String>>> = serde_json::from_slice(&pg_data)?;
+
+    let cmd_tups = cmds
+        .iter()
+        .fold(Vec::<(String, String)>::new(), |mut acc, ele| {
+            ele.keys().for_each(|k| {
+                acc.push((k.clone(), ele.get(k).unwrap().join(" ")));
+            });
+            acc
+        });
+
+    let enum_code = create_enum_code(ENUM_NAME, &cmd_tups);
+    let map_code = create_static_hashmap(MAP_NAME, ENUM_NAME, &cmd_tups);
+
+    Ok((enum_code, map_code))
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut output_data: Vec<u8> = vec![];
     create_or_clean_mod_code(format!(
@@ -133,17 +159,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     write_dep_module(&mut output_data, "std::collections::HashMap");
 
     let redis_codes = get_redis_command_code()?;
+    let pg_codes = get_pg_command_code()?;
 
     let all_code = format!(
-        "{}\n{}\n{}",
+        "{}\n{}\n{}\n{}\n{}",
         std::str::from_utf8(&output_data.as_slice()).unwrap(),
         redis_codes.0,
-        redis_codes.1
+        redis_codes.1,
+        pg_codes.0,
+        pg_codes.1
     );
 
     rewrite_mod_code(
         format!("{}/{}", env!("CARGO_MANIFEST_DIR"), CMD_OUTPUT_FILE),
-        all_code,
+        format!("{}", all_code),
     )?;
 
     let output = Command::new("cargo").arg("fmt").output()?;

@@ -41,8 +41,8 @@ impl PgUploader {
         }
     }
 
-    pub fn execute(&mut self, query : &'_ str, param : &'_ [&'_ str]) {
-
+    pub fn execute(&mut self, query : &'_ str, param : &'_ [&(dyn postgres::types::ToSql + Sync)]) -> Result<u64, Box<dyn Error>> {
+        let ret = self.client.execute(query, param)?;
+        Ok(ret)
     }
-
 }
