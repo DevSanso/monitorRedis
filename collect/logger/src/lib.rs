@@ -5,6 +5,15 @@ pub struct LoggerConfig {
     path : Option<String>
 }
 
+impl LoggerConfig {
+    pub fn new(level : String, path : Option<String>) -> Self {
+        LoggerConfig {
+            level,
+            path
+        }
+    }
+}
+
 fn convert_string_to_filter(level: &String) -> LevelFilter {
     match level.as_str() {
         "trace" => LevelFilter::Trace,

@@ -1,3 +1,6 @@
+use serde::{Deserialize};
+
+#[derive(Deserialize, Debug)]
 pub struct DbConnConfig<T> {
     pub user : String,
     pub password : String,
@@ -6,10 +9,10 @@ pub struct DbConnConfig<T> {
     pub port : u32
 }
 
+#[derive(Deserialize, Debug)]
 pub struct Config {
     pub pg_config : DbConnConfig<String>,
-    pub target_configs : Vec<DbConnConfig<u32>>,
 
-    pub logger_path : String,
+    pub logger_path : Option<String>,
     pub logger_level : String
 }

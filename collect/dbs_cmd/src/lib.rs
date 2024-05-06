@@ -59,11 +59,16 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
 pub enum PgCommand {
     ClientList,
     InfoServer,
+    RedisConnInfo,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
         let mut PG_COMMANDLINE_MAP_internal = HashMap::new();
-        PG_COMMANDLINE_MAP_internal.insert(PgCommand::ClientList," INSERT INTO redis_client_list   (link_key, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd)   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) ");
+        PG_COMMANDLINE_MAP_internal.insert(PgCommand::ClientList," INSERT INTO redis_client_list   (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd)   VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) ");
         PG_COMMANDLINE_MAP_internal.insert(PgCommand::InfoServer," INSERT INTO redis_info_server (   redis_version,   redis_mode,   os,   arch_bits,   multiplexing_api,   atomicvar_api,   gcc_version,   process_id,   run_id,   tcp_port,   uptime_in_seconds,   uptime_in_days,   hz,   lru_clock,   executable,   config_file  ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) ");
+        PG_COMMANDLINE_MAP_internal.insert(
+            PgCommand::RedisConnInfo,
+            " SELECT redis_id, username, password, ip, port, dbname FROM redis_conn ",
+        );
         PG_COMMANDLINE_MAP_internal
     });
