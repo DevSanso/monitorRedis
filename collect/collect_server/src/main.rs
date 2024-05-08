@@ -1,7 +1,7 @@
 mod config;
 mod worker;
 mod errors;
-mod thread_pool;
+mod threads;
 
 use std::env;
 use std::fs;

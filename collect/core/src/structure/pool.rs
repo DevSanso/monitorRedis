@@ -8,11 +8,11 @@ use super::{MaxSizedError, GenResultIsNoneError};
 pub struct PoolItem<'a,T> {
     value : Option<T>,
     is_use : AtomicBool,
-    command : Arc<Mutex<&'a mut dyn PoolCommander<T>>>
+    command : Arc<Mutex<&'a mut (dyn PoolCommander<T> + Sync + Send)>>
 }
 
 impl<'a,T> PoolItem<'a,T> {
-    pub(super) fn new(value : T, command : Arc<Mutex<&'a mut dyn PoolCommander<T>>>) -> Self {
+    pub(super) fn new(value : T, command : Arc<Mutex<&'a mut (dyn PoolCommander<T> + Sync + Send)>>) -> Self {
         PoolItem {
             value : Some(value),
             is_use : AtomicBool::new(true),
@@ -53,7 +53,6 @@ impl<'a,T> Drop for PoolItem<'a,T> {
         if self.is_use.load(Ordering::Relaxed) == true {
             self.restoration()
         }
-        
     }
 }
 
@@ -64,42 +63,48 @@ pub(super) trait PoolCommander<T> {
 
 pub struct Pool<T,P> {
     gen : Box<dyn Fn(P) -> Option<T>>,
-    items: Mutex<VecDeque<T>>,
-    max_size : AtomicUsize,
-    alloc_size : AtomicUsize
+    items: VecDeque<T>,
+    max_size : usize,
+    alloc_size : usize,
+    mutex_unit : Mutex<()>
 }
+
+unsafe impl<T,P> Sync for Pool<T,P> {}
+unsafe impl<T,P> Send for Pool<T,P> {}
 
 impl<T,P> Pool<T,P> {
     pub fn new(gen : Box<dyn Fn(P) -> Option<T>>, max_size : usize) -> Self {
         Pool {
             gen,
-            items : Mutex::new(VecDeque::new()),
-            max_size : AtomicUsize::new(max_size),
-            alloc_size : AtomicUsize::new(0)
+            items : VecDeque::new(),
+            max_size : max_size,
+            alloc_size : 0,
+            mutex_unit : Mutex::new(())
         }
     }
 
     pub fn get(&mut self, param : P) -> Result<PoolItem<T>, Box<dyn Error>> {
-        let mut queue = self.items.lock().unwrap();
+        let g_lock = self.mutex_unit.lock().unwrap();
 
-        if queue.len() == 0 {
-            if self.alloc_size.load(Ordering::Relaxed) < self.max_size.load(Ordering::Relaxed) {
+        if self.items.len() == 0 {
+            if self.alloc_size < self.max_size {
                 let gen_item = (self.gen)(param);
                 if gen_item.is_none() {
                     return Err(Box::new(GenResultIsNoneError));
                 }
-                queue.push_back(gen_item.unwrap());
-                self.alloc_size.fetch_add(1, Ordering::Relaxed);
+                self.items.push_back(gen_item.unwrap());
+                self.alloc_size += 1;
             } else {
                 return Err(Box::new(MaxSizedError));
             }
         }
-        let item = queue.pop_front().unwrap();
 
-        drop(queue);
+        let item = self.items.pop_front().unwrap();
 
-        let m : Mutex<&mut dyn PoolCommander<T>> = Mutex::new(self);
-        let arc : Arc<Mutex<& mut dyn PoolCommander<T>>>  = Arc::new(m);
+        drop(g_lock);
+
+        let m : Mutex<&mut (dyn PoolCommander<T> + Sync + Send)> = Mutex::new(self);
+        let arc : Arc<Mutex<& mut (dyn PoolCommander<T> + Sync + Send)>>  = Arc::new(m);
         
         Ok(PoolItem::new(item,arc))
     }
@@ -107,12 +112,13 @@ impl<T,P> Pool<T,P> {
 
 impl<T,P> PoolCommander<T> for Pool<T,P> {
     fn dispose(&mut self, _ : T) {
-        self.alloc_size.fetch_sub(1, Ordering::Relaxed);
+        let _g_lock = self.mutex_unit.lock().unwrap();
+        self.alloc_size -= 1;
     }
 
     fn restoration(&mut self, item : T) {
-        let mut queue = self.items.lock().unwrap();
-       queue.push_back(item);
+        let _g_lock = self.mutex_unit.lock().unwrap();
+        self.items.push_back(item);
     }
 }
 
