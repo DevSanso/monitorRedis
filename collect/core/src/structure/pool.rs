@@ -1,6 +1,6 @@
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicUsize,AtomicBool, Ordering};
-use std::{collections::VecDeque, sync::Arc};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::{collections::VecDeque};
 use std::error::Error;
 
 use super::{MaxSizedError, GenResultIsNoneError};
@@ -8,11 +8,11 @@ use super::{MaxSizedError, GenResultIsNoneError};
 pub struct PoolItem<'a,T> {
     value : Option<T>,
     is_use : AtomicBool,
-    command : Arc<Mutex<&'a mut (dyn PoolCommander<T> + Sync + Send)>>
+    command : &'a mut (dyn PoolCommander<T> + Sync + Send)
 }
 
 impl<'a,T> PoolItem<'a,T> {
-    pub(super) fn new(value : T, command : Arc<Mutex<&'a mut (dyn PoolCommander<T> + Sync + Send)>>) -> Self {
+    pub(super) fn new(value : T, command : &'a mut (dyn PoolCommander<T> + Sync + Send)) -> Self {
         PoolItem {
             value : Some(value),
             is_use : AtomicBool::new(true),
@@ -20,8 +20,8 @@ impl<'a,T> PoolItem<'a,T> {
         }
     }
 
-    pub fn get_value(&'a mut self) -> &'a mut T {
-        let r = self.value.as_mut().unwrap();
+    pub fn get_value<'b>(&'b mut self) -> &'b mut T where 'a : 'b {
+        let r :&'b mut T = self.value.as_mut().unwrap();
         r
     }
 
@@ -30,9 +30,8 @@ impl<'a,T> PoolItem<'a,T> {
         self.is_use.store(false, Ordering::Relaxed);
 
         if used == true {
-            let mut mg = self.command.lock().unwrap();
             let val = self.value.take();
-            mg.dispose(val.unwrap());
+            self.command.dispose(val.unwrap());
         }
     }
 
@@ -41,9 +40,8 @@ impl<'a,T> PoolItem<'a,T> {
         self.is_use.store(false, Ordering::Relaxed);
 
         if used {
-            let mut mg = self.command.lock().unwrap();
             let val = self.value.take();
-            mg.restoration(val.unwrap());
+            self.command.restoration(val.unwrap());
         }
     }
 }
@@ -102,11 +100,7 @@ impl<T,P> Pool<T,P> {
         let item = self.items.pop_front().unwrap();
 
         drop(g_lock);
-
-        let m : Mutex<&mut (dyn PoolCommander<T> + Sync + Send)> = Mutex::new(self);
-        let arc : Arc<Mutex<& mut (dyn PoolCommander<T> + Sync + Send)>>  = Arc::new(m);
-        
-        Ok(PoolItem::new(item,arc))
+        Ok(PoolItem::new(item,self))
     }
 }
 

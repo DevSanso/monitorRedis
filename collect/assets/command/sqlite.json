@@ -1,0 +1,3 @@
+[
+    {"RedisConnInfo" : [ " SELECT redis_id, username, password, dbname, ip, port FROM redis_conn " ]}
+]

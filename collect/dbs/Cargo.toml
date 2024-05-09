@@ -8,3 +8,4 @@ postgres = "0.19.7"
 redis = "0.25.3"
 
 core = {path = "../core"}
+rusqlite = { version = "0.28.0", features = ["bundled"] }

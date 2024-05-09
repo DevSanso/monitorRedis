@@ -1,9 +1,7 @@
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
-use std::io::Seek;
 use std::io::Write;
-use std::path;
 use std::path::Path;
 use std::process::Command;
 
@@ -15,6 +13,10 @@ fn get_redis_command_json_file() -> Vec<u8> {
 
 fn get_pg_command_json_file() -> Vec<u8> {
     include_bytes!("../assets/command/pg.json").to_vec()
+}
+
+fn get_sqlite_command_json_file() -> Vec<u8> {
+    include_bytes!("../assets/command/sqlite.json").to_vec()
 }
 
 fn write_link_submod(root_mod: &mut Vec<u8>, sub_mod: &'_ str) {
@@ -84,18 +86,27 @@ fn create_static_hashmap(
     );
 
     let mut init_func = String::from("|| {\n");
-    init_func.push_str(format!("let mut {}_internal = HashMap::new();\n", hashmap_name).as_str());
+    init_func.push_str(
+        format!(
+            "let mut {}_internal = HashMap::new();\n",
+            hashmap_name.to_lowercase()
+        )
+        .as_str(),
+    );
 
     for ele in list {
         init_func.push_str(
             format!(
                 "{}_internal.insert({}::{},\"{}\");\n",
-                hashmap_name, enum_name, ele.0, ele.1
+                hashmap_name.to_lowercase(),
+                enum_name,
+                ele.0,
+                ele.1
             )
             .as_str(),
         );
     }
-    init_func.push_str(format!("{}_internal \n}}", hashmap_name).as_str());
+    init_func.push_str(format!("{}_internal \n}}", hashmap_name.to_lowercase()).as_str());
 
     let mut lazy_new = format!("once_cell::sync::Lazy::new({})", init_func);
 
@@ -125,12 +136,12 @@ fn get_redis_command_code() -> Result<(String, String), Box<dyn std::error::Erro
     Ok((enum_code, map_code))
 }
 
-fn get_pg_command_code() -> Result<(String, String), Box<dyn std::error::Error>> {
-    const ENUM_NAME: &'static str = "PgCommand";
-    const MAP_NAME: &'static str = "PG_COMMANDLINE_MAP";
-
-    let pg_data = get_pg_command_json_file();
-    let cmds: Vec<HashMap<String, Vec<String>>> = serde_json::from_slice(&pg_data)?;
+fn get_rdb_command_code(
+    enum_name: &'static str,
+    map_name: &'static str,
+    rdb_sql_file: Vec<u8>,
+) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let cmds: Vec<HashMap<String, Vec<String>>> = serde_json::from_slice(&rdb_sql_file)?;
 
     let cmd_tups = cmds
         .iter()
@@ -141,8 +152,8 @@ fn get_pg_command_code() -> Result<(String, String), Box<dyn std::error::Error>>
             acc
         });
 
-    let enum_code = create_enum_code(ENUM_NAME, &cmd_tups);
-    let map_code = create_static_hashmap(MAP_NAME, ENUM_NAME, &cmd_tups);
+    let enum_code = create_enum_code(enum_name, &cmd_tups);
+    let map_code = create_static_hashmap(map_name, enum_name, &cmd_tups);
 
     Ok((enum_code, map_code))
 }
@@ -159,15 +170,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     write_dep_module(&mut output_data, "std::collections::HashMap");
 
     let redis_codes = get_redis_command_code()?;
-    let pg_codes = get_pg_command_code()?;
+    let pg_codes = get_rdb_command_code(
+        "PgCommand",
+        "PG_COMMANDLINE_MAP",
+        get_pg_command_json_file(),
+    )?;
+    let sqlite_codes = get_rdb_command_code(
+        "SQLiteCommand",
+        "SQLITE_COMMANDLINE_MAP",
+        get_sqlite_command_json_file(),
+    )?;
 
     let all_code = format!(
-        "{}\n{}\n{}\n{}\n{}",
+        "{}\n{}\n{}\n{}\n{}\n{}\n{}",
         std::str::from_utf8(&output_data.as_slice()).unwrap(),
         redis_codes.0,
         redis_codes.1,
         pg_codes.0,
-        pg_codes.1
+        pg_codes.1,
+        sqlite_codes.0,
+        sqlite_codes.1
     );
 
     rewrite_mod_code(
