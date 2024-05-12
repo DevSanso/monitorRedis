@@ -1,0 +1,12 @@
+{
+    "pg_config" : {
+        "user" : "postgres",
+        "password" : "postgres",
+        "db_name" : "postgres",
+        "ip" : "localhost",
+        "port" : 5432
+    },
+    "sqlite_path" : "../data/sqlite.db",
+    "logger_path" : "../data/collect_server.log",
+    "logger_level" : "error"
+}
