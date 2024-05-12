@@ -21,7 +21,7 @@ use logger::{init_logger, LoggerConfig};
 use dbs::pg_pool::PgPool;
 use dbs::utils::create_pg_url;
 use threads::ThreadExecuter;
-use worker::collect::make_common_worker;
+use worker::collect::make_sec_worker;
 
 fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, SqlitePool) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
@@ -69,7 +69,7 @@ fn make_redis_monitor(v : Vec<(u32,config::DbConnConfig<u32>)>, global_pg_p : &'
         let redis_p = RedisPool::new(create_redis_url(conn_info.user.as_str(), 
         conn_info.password.as_str(), conn_info.ip.as_str(), conn_info.port, conn_info.db_name));
 
-        let execute = ThreadExecuter::new(x.0, redis_p, clone_pg_p, make_common_worker());
+        let execute = ThreadExecuter::new(x.0, redis_p, clone_pg_p, make_sec_worker());
         acc.push(execute);
         acc
     });
