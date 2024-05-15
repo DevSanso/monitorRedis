@@ -7,6 +7,7 @@ import (
 	"restapi/services"
 	"restapi/types/core"
 	"restapi/constant"
+	"restapi/global"
 )
 
 type handlerImpl struct{
@@ -26,7 +27,8 @@ func wrapperCustomHandler( fun CustomHandlerFunc) http.HandlerFunc{
 		}
 
 		if res.Err != nil {
-
+			iLogger := global.GetLogger()
+			iLogger.Err(res.Err.Error())
 		}
 		w.WriteHeader(res.Code)
 	}

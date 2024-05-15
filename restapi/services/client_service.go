@@ -8,7 +8,6 @@ import (
 	"restapi/repos"
 	"restapi/types/core"
 	"restapi/types/errs"
-	"restapi/utils"
 )
 
 type ClientService struct{}
@@ -25,34 +24,17 @@ func (c *ClientService) List(r *http.Request) *core.ApplicationResponse {
 			Err:      &errs.BadRequestError{Ip: r.Host, Url: r.URL.String(), Msg: fmt.Sprintf("object_id(%s) can't cast", id)},
 		}
 	}
-	
+
 	clientRepo := repos.NewClientRepo(r.Context())
-	defer clientRepo.Close()
 
 	list, listErr := clientRepo.List(castId)
 
-	if listErr != nil {
-		ret := new(core.ApplicationResponse)
-		ret.Err = &errs.InternalError{
-			Ip:  r.Host,
-			Url: r.URL.String(),
-			Err: listErr,
-		}
-
-		if utils.CheckErrorIs[*errs.ServerDbConnFailedError](listErr) {
-			ret.Code = 500
-		}
-		if utils.CheckErrorIs[*errs.NoDataError](listErr) {
-			ret.Response = []byte("[]")
-			ret.Code = 204
-		}
-		
-		return ret
-	}
+	errRes := writeCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
+	if errRes != nil { return errRes }
 
 	ret := new(core.ApplicationResponse)
 
-	body, jsonErr := ObjectToJsonString(list)
+	body, jsonErr := objectToJsonString(list)
 	ret.Response = body
 	ret.Err = jsonErr
 

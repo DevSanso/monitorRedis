@@ -2,43 +2,31 @@ package repos
 
 import (
 	"context"
-	"database/sql"
-	"sync"
 
 	"restapi/types/errs"
-	"restapi/global"
 	"restapi/types/repo_vo"
+	"restapi/dao"
+	"restapi/repos/internal"
+	r_query "restapi/constant/query/redis"
 )
 
-type clientRepo struct {
-	collectConn *sql.Conn
-	initErr error
-	closeOnce sync.Once
-
-}
+type clientRepo struct {ctx context.Context}
 
 func NewClientRepo(ctx context.Context) *clientRepo {
-	conn, connErr := global.GetCollectConn(ctx)
-	
-	return &clientRepo{
-		collectConn: conn,
-		initErr: connErr,
-	}
+	return &clientRepo{ctx :ctx}
 }
-func (cr *clientRepo)Close() error {
-	var err error = nil
-	cr.closeOnce.Do(func() {
-		if cr.collectConn == nil {return}
-		err = cr.Close()
-		cr.collectConn = nil
-	})
-	return err
-}
+
 func (cr *clientRepo)List(id int) ([]repo_vo.ClientInfoVO, error) {
-	if cr.initErr != nil {
-		if cr.collectConn != nil {cr.collectConn.Close()}
-		return nil, &errs.ServerDbConnFailedError{Source: cr.initErr, Server: "collect"}
+	collectDao, daoErr := dao.NewStdDao(cr.ctx, dao.CollectDB)
+	if daoErr != nil {
+		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
+	}
+	defer collectDao.Close()
+
+	res, QueryErr := dao.StdQueryRun[repo_vo.ClientInfoVO](collectDao, r_query.ClientListQuery, internal.ClientRepoGenClientList, id)
+	if QueryErr != nil {
+		return nil, &errs.ServerDbConnExcuteError{Source: QueryErr, Server : "collect", ObjectNames: []string{"client_list"}}
 	}
 
-	return nil,nil
+	return res, nil
 }

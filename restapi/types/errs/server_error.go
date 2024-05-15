@@ -2,6 +2,7 @@ package errs
 
 import (
 	"fmt"
+	"strings"
 )
 
 type OOMError struct {
@@ -32,6 +33,16 @@ type ServerDbConnFailedError struct {
 
 func (e *ServerDbConnFailedError)Error() string {
 	return fmt.Sprintf("[ServerDbConnFailedError] : (Server:%s,Source:%s)",e.Server, e.Source.Error())
+}
+
+type ServerDbConnExcuteError struct {
+	Server string
+	Source error
+	ObjectNames []string
+}
+
+func (e *ServerDbConnExcuteError)Error() string {
+	return fmt.Sprintf("[ServerDbConnExcuteError] : (Server:%s,Source:%s,Objects:%s)",e.Server, e.Source.Error(), strings.Join(e.ObjectNames,"|"))
 }
 
 type NoDataError struct {
