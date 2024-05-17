@@ -1,0 +1,4 @@
+id=3 addr=127.0.0.1:37950 fd=8 name= age=37 idle=16 flags=x db=0 sub=0 psub=0 multi=3 qbuf=0 qbuf-free=0 obl=0 oll=0 omem=0 events=r cmd=set
+id=4 addr=172.17.0.1:53416 fd=9 name=redisinsight-common-076b4eb0 age=12 idle=2 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=0 qbuf-free=0 obl=0 oll=0 omem=0 events=r cmd=info
+id=5 addr=172.17.0.1:53424 fd=10 name=redisinsight-browser-076b4eb0 age=12 idle=12 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=0 qbuf-free=0 obl=0 oll=0 omem=0 events=r cmd=ttl
+id=6 addr=172.17.0.1:46964 fd=11 name=redisinsight-workbench-076b4eb0 age=0 idle=0 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=26 qbuf-free=32742 obl=0 oll=0 omem=0 events=r cmd=client

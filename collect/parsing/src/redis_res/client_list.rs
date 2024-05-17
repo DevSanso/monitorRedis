@@ -40,8 +40,8 @@ fn mapping_client_list_item(key : &'_ str, value : &'_ str, refer : &mut ClientL
         "flags" => refer.flags = value.parse()?,
         "db" => refer.db = value.parse()?,
         "sub" => refer.sub = value.parse()?,
-        "pusb" => refer.psub = value.parse()?,
-        "mutli" => refer.multi = value.parse()?,
+        "psub" => refer.psub = value.parse()?,
+        "multi" => refer.multi = value.parse()?,
         "qbuf" => refer.qbuf = value.parse()?,
         "qbuf-free" => refer.qbuf_free = value.parse()?,
         "obl" => refer.obl = value.parse()?,
@@ -49,7 +49,7 @@ fn mapping_client_list_item(key : &'_ str, value : &'_ str, refer : &mut ClientL
         "omem" => refer.omem = value.parse()?,
         "events" => refer.events = value.chars().next().unwrap(),
         "cmd" => refer.cmd = String::from(value),
-        _ => return Err(Box::new(CantMappingValueError))
+        _ => return Err(Box::new(CantMappingValueError::new(String::from(key))))
     }
 
     Ok(())
@@ -65,4 +65,16 @@ pub fn parsing_client_list(res : String) -> Result<ClientList, Box<dyn Error>> {
     }
 
     Ok(list)
+}
+
+#[cfg(test)]
+mod client_list_tests {
+    use std::error::Error;
+    #[test]
+    pub fn test_parsing_client_list() -> Result<(), Box<dyn Error>> {
+        let test_data = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/test/data/redis/client_list.txt"));
+        super::parsing_client_list(String::from(test_data))?;
+
+        Ok(())
+    }
 }

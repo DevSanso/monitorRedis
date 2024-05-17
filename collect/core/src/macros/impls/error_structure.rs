@@ -27,10 +27,16 @@ macro_rules! impl_error_structure {
 
     };
 
-    (private $name : ident, $descr : expr) => {
+    (arg, $name : ident, $descr : expr) => {
         
         #[derive(Debug)]
-        struct $name;
+        pub struct $name(String);
+
+        impl $name {
+            pub fn new(msg : String) -> Self {
+                $name(msg)
+            }
+        }
 
         impl Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -54,3 +60,4 @@ macro_rules! impl_error_structure {
 
     };
 }
+
