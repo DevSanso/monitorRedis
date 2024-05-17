@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 
+	"restapi/constant"
+	"restapi/global/log"
 	"restapi/services"
 	"restapi/types/core"
-	"restapi/constant"
-	"restapi/global"
+	"restapi/types/errs"
 )
 
 type handlerImpl struct{
@@ -27,8 +28,11 @@ func wrapperCustomHandler( fun CustomHandlerFunc) http.HandlerFunc{
 		}
 
 		if res.Err != nil {
-			iLogger := global.GetLogger()
-			iLogger.Err(res.Err.Error())
+			if res.Code < 500 {
+				log.Info(res.Err.Error())
+			}else {
+				log.Err(res.Err.Error())
+			}
 		}
 		w.WriteHeader(res.Code)
 	}
@@ -49,6 +53,8 @@ func (impl *handlerImpl)allocService(r *http.Request) bool {
 	case "client":
 		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, &services.ClientService{}))
 	default:
+		e := errs.BadRequestError {Ip : r.Host, Url: r.URL.String(), Msg: "not support AllocService"}
+		log.Info(e.Error())
 		return false
 	}
 

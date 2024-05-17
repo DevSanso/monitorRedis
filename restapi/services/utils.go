@@ -33,7 +33,7 @@ func readBodyFromRequest(r *http.Request, allocSize int) ([]byte, *core.Applicat
 	return body, nil
 }
 
-func writeCommonErrorFromAppResponse(err error, host string, url string) *core.ApplicationResponse {
+func writeIfCommonErrorFromAppResponse(err error, host string, url string) *core.ApplicationResponse {
 	if err == nil {
 		return nil
 	}
@@ -51,6 +51,23 @@ func writeCommonErrorFromAppResponse(err error, host string, url string) *core.A
 	if utils.CheckErrorIs[*errs.NoDataError](err) {
 		ret.Response = []byte("[]")
 		ret.Code = 204
+	}
+
+	return ret
+}
+
+func writeCommonResultFromAppResponse(body any) *core.ApplicationResponse {
+	ret := new(core.ApplicationResponse)
+
+	body_bytes, jsonErr := objectToJsonString(body)
+	ret.Response = body_bytes
+	
+	if jsonErr != nil {
+		ret.Code = 500
+		ret.Err = jsonErr
+	} else {
+		ret.Code = 200
+		ret.Err = nil
 	}
 
 	return ret

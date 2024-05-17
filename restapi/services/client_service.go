@@ -29,19 +29,8 @@ func (c *ClientService) List(r *http.Request) *core.ApplicationResponse {
 
 	list, listErr := clientRepo.List(castId)
 
-	errRes := writeCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
+	errRes := writeIfCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
 	if errRes != nil { return errRes }
 
-	ret := new(core.ApplicationResponse)
-
-	body, jsonErr := objectToJsonString(list)
-	ret.Response = body
-	ret.Err = jsonErr
-
-	if jsonErr != nil {
-		ret.Code = 500
-	} else {
-		ret.Code = 200
-	}
-	return ret
+	return writeCommonResultFromAppResponse(list)
 }
