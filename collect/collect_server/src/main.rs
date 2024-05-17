@@ -83,16 +83,7 @@ fn process_mon_loop() {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>>{
-    let args : Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        return Err(Box::new(errors::MoreArgsError));
-    }
-
-    let config_str = fs::read_to_string(args[1].clone())?;
-
-    let cfg : Config = serde_json::from_str(config_str.as_str())?;
-    
+pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {    
     let log_cfgs = vec![LoggerConfig::new(cfg.logger_level.clone(), cfg.logger_path.clone())];
     init_logger(log_cfgs)?;
 
@@ -108,5 +99,19 @@ fn main() -> Result<(), Box<dyn Error>>{
     
     process_mon_loop();
 
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn Error>>{
+    let args : Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        return Err(Box::new(errors::MoreArgsError));
+    }
+
+    let config_str = fs::read_to_string(args[1].clone())?;
+
+    let cfg : Config = serde_json::from_str(config_str.as_str())?;
+
+    server_main(cfg)?;
     Ok(())
 }
