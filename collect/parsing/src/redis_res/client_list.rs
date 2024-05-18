@@ -2,7 +2,7 @@ use std::error::Error;
 
 use crate::redis_res::split_eq_tuple;
 use crate::redis_res::split_line_and_fold_data;
-use crate::redis_res::CantMappingValueError;
+use crate::errs::CantMappingValueError;
 
 #[derive(Default)]
 pub struct ClientListItem {

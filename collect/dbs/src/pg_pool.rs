@@ -3,7 +3,7 @@ use std::error::Error;
 use postgres;
 
 use core::structure::pool::{Pool, PoolItem};
-use crate::OutIndexRowError;
+use crate::errs::OutIndexRowError;
 
 pub struct PgPool {
     pool : Pool<PgUploader, String>,

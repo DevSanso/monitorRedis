@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{collections::VecDeque};
 use std::error::Error;
 
-use super::{MaxSizedError, GenResultIsNoneError};
+use super::errs::{MaxSizedError, GenResultIsNoneError};
 
 pub struct PoolItem<'a,T> {
     value : Option<T>,

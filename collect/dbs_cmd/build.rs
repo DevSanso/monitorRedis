@@ -191,12 +191,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sqlite_codes.0,
         sqlite_codes.1
     );
+    let output_file = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), CMD_OUTPUT_FILE);
+    rewrite_mod_code(output_file.clone(), format!("{}", all_code))?;
 
-    rewrite_mod_code(
-        format!("{}/{}", env!("CARGO_MANIFEST_DIR"), CMD_OUTPUT_FILE),
-        format!("{}", all_code),
-    )?;
-
-    let output = Command::new("cargo").arg("fmt").output()?;
+    let _output = Command::new("rustfmt")
+        .arg(output_file.as_str())
+        .output()?;
     Ok(())
 }

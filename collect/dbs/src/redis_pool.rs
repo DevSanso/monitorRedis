@@ -3,7 +3,7 @@ use std::error::Error;
 use redis::{Client, Cmd};
 
 use core::structure::pool::{Pool, PoolItem};
-use crate::NotMatchArgsLenError;
+use crate::errs::NotMatchArgsLenError;
 pub struct RedisPool {
     pool : Pool<RedisRequester, String>,
     url : String
