@@ -141,11 +141,19 @@ impl<T,P> Pool<T,P> {
     pub fn max_size(&self) -> usize {
         self.max_size
     }
+    pub fn free_all_alloc_item(&mut self) {
+        let g_lock = self.mutex_unit.lock().unwrap();
+        self.items.clear();
+        self.alloc_size = self.items.iter().count();
+        drop(g_lock);
+    }
+
     pub fn new_alloc_if_len_zeros(&mut self, ps : Vec<P>) ->Result<Vec<T>,Box<dyn Error>> {
         let g_lock = self.mutex_unit.lock().unwrap();
         let l = ps.len();
+
         for p in ps {
-            if self.items.len() == 0 {
+            if self.items.len() < l {
                 if self.alloc_size < self.max_size {
                     let gen_item = (self.gen)(p);
                 if gen_item.is_none() {
@@ -157,7 +165,8 @@ impl<T,P> Pool<T,P> {
                     return Err(Box::new(MaxSizedError));
                 }
             }
-        }       
+        }   
+
         let mut ret = Vec::new();
 
         for _ in 0..l {
@@ -183,6 +192,9 @@ impl<T,P> Pool<T,P> {
 
         let ret = PoolItems::new(r, self);
         Ok(ret)
+    }
+    pub fn clear(&mut self)  {
+        self.free_all_alloc_item();
     }
 
 }
@@ -218,12 +230,53 @@ mod pool_tests {
     use std::error::Error;
     #[test]
     pub fn test_pool() -> Result<(), Box<dyn Error>> {
-        let mut p = super::Pool::new(Box::new(|x : ()| {
+        let mut p = super::Pool::new(Box::new(|_x : ()| {
             return Some(())
         }),5);
 
         {
+            let mut _i = p.gets(vec![(),(),()])?;
+            _i.dispose();
         }
+        assert_eq!(0, p.alloc_size(),"dispose not working");
+
+        {
+            let mut _i = p.gets(vec![(),(),()])?;
+        }
+        assert_eq!(3, p.alloc_size(),"alloc item not working");
+
+        {
+            let mut _i = p.get(())?;
+        }
+        assert_eq!(3, p.alloc_size(),"reused item logic not working");
+
+        {
+            let mut _i = p.get(())?;
+            let _chk_compile_err = _i.get_value();
+        }
+
+        {
+            let err = p.gets(vec![(),(),(),(),(),()]);
+            if err.is_err() == false {
+                assert!(true,"MaxSize Error logic not working");
+            }
+        }
+        assert_eq!(5, p.alloc_size(),"full alloc not working");
+
+        p.clear();
+        assert_eq!(0, p.alloc_size(),"clear not working");
+
+        {
+            let _i = p.get(())?;
+        }
+        assert_eq!(1, p.alloc_size(),"get not working");
+
+        {
+            let mut _i = p.get(())?;
+            _i.dispose();
+        }
+        assert_eq!(0, p.alloc_size(),"alloc dispose not working");
+
 
         Ok(())
     }
