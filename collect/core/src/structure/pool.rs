@@ -1,3 +1,4 @@
+use std::fmt::Pointer;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{collections::VecDeque};
@@ -115,20 +116,22 @@ pub struct Pool<T,P> {
     items: VecDeque<T>,
     max_size : usize,
     alloc_size : usize,
-    mutex_unit : Mutex<()>
+    mutex_unit : Mutex<()>,
+    pool_name : String
 }
 
 unsafe impl<T,P> Sync for Pool<T,P> {}
 unsafe impl<T,P> Send for Pool<T,P> {}
 
 impl<T,P> Pool<T,P> {
-    pub fn new(gen : Box<dyn Fn(P) -> Option<T>>, max_size : usize) -> Self {
+    pub fn new(name : String, gen : Box<dyn Fn(P) -> Option<T>>, max_size : usize) -> Self {
         Pool {
             gen,
             items : VecDeque::new(),
             max_size : max_size,
             alloc_size : 0,
-            mutex_unit : Mutex::new(())
+            mutex_unit : Mutex::new(()),
+            pool_name : name
         }
     }
     pub fn alloc_size(&self) -> usize {
@@ -157,12 +160,12 @@ impl<T,P> Pool<T,P> {
                 if self.alloc_size < self.max_size {
                     let gen_item = (self.gen)(p);
                 if gen_item.is_none() {
-                    return Err(Box::new(GenResultIsNoneError));
+                    return Err(Box::new(GenResultIsNoneError::new(self.pool_name.clone())));
                 }
                 self.items.push_back(gen_item.unwrap());
                 self.alloc_size += 1;
                 } else {
-                    return Err(Box::new(MaxSizedError));
+                    return Err(Box::new(MaxSizedError::new(self.pool_name.clone())));
                 }
             }
         }   
@@ -230,7 +233,7 @@ mod pool_tests {
     use std::error::Error;
     #[test]
     pub fn test_pool() -> Result<(), Box<dyn Error>> {
-        let mut p = super::Pool::new(Box::new(|_x : ()| {
+        let mut p = super::Pool::new(String::from("test"),Box::new(|_x : ()| {
             return Some(())
         }),5);
 

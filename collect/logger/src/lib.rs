@@ -1,5 +1,5 @@
 use simplelog::*;
-
+use log::*;
 pub struct LoggerConfig {
     level : String,
     path : Option<String>
@@ -26,8 +26,7 @@ fn convert_string_to_filter(level: &String) -> LevelFilter {
 }
 
 pub fn init_logger(cfgs : Vec<LoggerConfig>) -> Result<(), log::SetLoggerError> {
-    let loggers = cfgs.iter().fold( Vec::<Box<dyn SharedLogger + 'static>>::new(), |mut acc, cfg| {
-        acc.push(SimpleLogger::new(LevelFilter::Trace, Config::default()));
+    let mut loggers = cfgs.iter().fold( Vec::<Box<dyn SharedLogger + 'static>>::new(), |mut acc, cfg| {
         
         if cfg.path.is_some() {
             acc.push(WriteLogger::new(
@@ -38,5 +37,9 @@ pub fn init_logger(cfgs : Vec<LoggerConfig>) -> Result<(), log::SetLoggerError> 
         }
         acc
     });
-    CombinedLogger::init(loggers)
+
+    loggers.push(TermLogger::new(LevelFilter::Trace, Config::default(), TerminalMode::Mixed, ColorChoice::Never));
+
+    let ret = CombinedLogger::init(loggers);
+    ret
 }

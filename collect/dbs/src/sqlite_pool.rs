@@ -1,7 +1,11 @@
+use std::error::Error;
+
 use rusqlite::{Connection, OpenFlags};
+use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
-use std::error::Error;
+
+
 
 pub struct SqlitePool {
     p : Pool<Connection, String>,
@@ -10,7 +14,7 @@ pub struct SqlitePool {
 
 impl SqlitePool {
     pub fn new(file_path : String) -> Self {
-        return SqlitePool { p: Pool::new(Box::new(Self::gen), 1) , file_path}
+        return SqlitePool { p: Pool::new(String::from("sqlite_pool"), Box::new(Self::gen), 1) , file_path}
     }
 
     pub fn get(&mut self) -> Result<PoolItem<Connection>, Box<dyn Error>> {
@@ -20,6 +24,7 @@ impl SqlitePool {
     fn gen(path : String) -> Option<Connection> {
         let c = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY);
         if c.is_err() {
+            trace!("SqlitePool - gen : {}", c.err().unwrap());
             return None;
         }
 

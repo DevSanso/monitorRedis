@@ -10,6 +10,7 @@ use chrono::prelude::*;
 
 use dbs::redis_pool::{RedisPool, RedisRequester};
 use dbs::pg_pool::{PgPool, PgUploader};
+use log::*;
 use core::structure::pool::PoolItem;
 
 pub type WorkerFn = &'static (dyn Fn(u32, &'_ mut dbs::redis_pool::RedisRequester, &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> + Send + Sync);
@@ -53,12 +54,15 @@ impl ThreadExecuter {
     }
 
     fn run_worker(worker_name : &'_ str, mut r : PoolItem<'_, RedisRequester>, mut p : PoolItem<'_, PgUploader>, unqiue_id : u32, state_used : Arc<Mutex<bool>>, fun : WorkerFn) {
-        let g_used = state_used.lock().unwrap();
-        if *g_used == true { 
-            log::info!("run_worker[{}]- {} - already running ", unqiue_id, worker_name);
-            return;
-         }
-
+        
+        {
+            let g_used = state_used.lock().unwrap();
+            if *g_used == true { 
+                log::info!("run_worker[{}]- {} - already running ", unqiue_id, worker_name);
+                return;
+             }
+        }
+        
         let r_ref = &mut r;
         let p_ref = &mut p;
         
@@ -100,7 +104,6 @@ impl ThreadExecuter {
                     
                     for worker in &mapping {
                         let sec = worker.1.0.as_secs();
-
                         if now_sec % (sec as u32) != 0 { continue; }
 
                         let thr_redis_r = Arc::clone(&redis_p);
@@ -110,7 +113,6 @@ impl ThreadExecuter {
                         let work_name = worker.0.clone();
 
                         let builder = thread::Builder::new();
-
                         let _ = builder
                             .name(format!("{} - {}", unqiue_id, &work_name))
                             .stack_size(1024 * 512)
@@ -131,7 +133,7 @@ impl ThreadExecuter {
                     }
     
                 }
-                thread::sleep(Duration::from_millis(100));
+                thread::sleep(Duration::from_millis(1000));
             }
         });
 

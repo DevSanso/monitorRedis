@@ -40,7 +40,7 @@ macro_rules! impl_error_structure {
 
         impl Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", stringify!($name))
+                write!(f, "{}({})", stringify!($name), self.0)
             }
         }
 

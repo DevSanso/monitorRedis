@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 postgres = "0.19.7"
 redis = "0.25.3"
+log = "0.4.21"
 
 core = {path = "../core"}
 rusqlite = { version = "0.28.0", features = ["bundled"] }

@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use postgres;
+use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
 use crate::errs::OutIndexRowError;
@@ -13,7 +14,7 @@ pub struct PgPool {
 impl PgPool {
     pub fn new(url : String) -> Self {
         PgPool {
-            pool : Pool::new(Box::new(PgPool::gen), 10),
+            pool : Pool::new(String::from("pg_pool"),Box::new(PgPool::gen), 10),
             url
         }
     }
@@ -21,7 +22,10 @@ impl PgPool {
     fn gen(url : String) -> Option<PgUploader> {
         match postgres::Client::connect(url.as_str(), postgres::NoTls) {
             Ok(client) => Some(PgUploader::new(client)),
-            Err(_) => None
+            Err(c) =>  {
+                trace!("PgPool - gen : {}", c);
+                None
+            }
         }
     }
 

@@ -66,7 +66,7 @@ fn make_redis_monitor(v : Vec<(u32,config::DbConnConfig<u32>)>, global_pg_p : &'
         let conn_info = &x.1;
         let clone_pg_p = Arc::clone(global_pg_p);
 
-        let redis_p = RedisPool::new(create_redis_url(conn_info.user.as_str(), 
+        let redis_p = RedisPool::new(conn_info.ip.clone(),create_redis_url(conn_info.user.as_str(), 
         conn_info.password.as_str(), conn_info.ip.as_str(), conn_info.port, conn_info.db_name));
 
         let execute = ThreadExecuter::new(x.0, redis_p, clone_pg_p, make_sec_worker());
@@ -81,6 +81,14 @@ fn process_mon_loop() {
     loop {
         thread::sleep(Duration::from_secs(60));
     }
+}
+
+fn get_process_arg() -> Result<String, Box<dyn Error>> {
+    let args : Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        return Err(Box::new(errors::MoreArgsError));
+    }
+    Ok(args[0].clone())
 }
 
 pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {    
@@ -102,16 +110,44 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn Error>>{
-    let args : Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        return Err(Box::new(errors::MoreArgsError));
+#[cfg(feature = "runTest")]
+pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
+    let log_cfgs = vec![];
+    init_logger(log_cfgs)?;
+    let mut pools = get_pool(&cfg);
+
+    let redis_list = get_redis_access_datas(&mut pools.1)?;
+
+    let mut execs = make_redis_monitor(redis_list, &pools.0);
+
+    for exec in &mut execs {
+        exec.auto_no_block_run();
     }
 
-    let config_str = fs::read_to_string(args[1].clone())?;
+    process_mon_loop();
+
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn Error>>{
+    #[cfg(not(feature = "runTest"))]
+    let arg = get_process_arg()?;
+
+    #[cfg(not(feature = "runTest"))]
+    let config_str = fs::read_to_string(arg.clone())?;
+
+    #[cfg(feature = "runTest")]
+    let config_str = String::from(include_str!(
+        "../../assets/test/config/server_test.json"
+    ));
 
     let cfg : Config = serde_json::from_str(config_str.as_str())?;
 
+
+    #[cfg(not(feature = "runTest"))]
     server_main(cfg)?;
+    #[cfg(feature = "runTest")]
+    server_main_test(cfg)?;
+
     Ok(())
 }
