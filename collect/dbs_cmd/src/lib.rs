@@ -58,13 +58,13 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
 #[derive(Eq, PartialEq, Hash)]
 pub enum PgCommand {
     ClientList,
-    InfoServer,
+    InfoCpu,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
         let mut pg_commandline_map_internal = HashMap::new();
         pg_commandline_map_internal.insert(PgCommand::ClientList," INSERT INTO redis_client_list   (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd)   VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) ");
-        pg_commandline_map_internal.insert(PgCommand::InfoServer," INSERT INTO redis_info_server (   redis_version,   redis_mode,   os,   arch_bits,   multiplexing_api,   atomicvar_api,   gcc_version,   process_id,   run_id,   tcp_port,   uptime_in_seconds,   uptime_in_days,   hz,   lru_clock,   executable,   config_file  ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) ");
+        pg_commandline_map_internal.insert(PgCommand::InfoCpu," INSERT INTO redis_info_cpu (   link_key,   collect_time,   used_cpu_sys,   used_cpu_user,   used_cpu_sys_children,   used_cpu_user_children  ) VALUES ( $1, now(), $2, $3, $4, $5) ");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]

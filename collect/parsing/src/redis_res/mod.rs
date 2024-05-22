@@ -1,4 +1,5 @@
 mod client_list;
+mod info_cpu;
 
 use std::error::Error;
 use crate::errs::CantCastTupleError;
@@ -6,6 +7,16 @@ use crate::errs::CantCastTupleError;
 #[inline]
 pub(crate) fn split_eq_tuple(s : &'_ str) -> Result<(String, String), Box<dyn Error>> {
     let v : Vec<&str> = s.split("=").collect();
+    if v.len() != 2 {
+        return Err(Box::new(CantCastTupleError));
+    }
+
+    Ok((String::from(v[0]), String::from(v[1])))
+}
+
+#[inline]
+pub(crate) fn split_colon_tuple(s : &'_ str) -> Result<(String, String), Box<dyn Error>> {
+    let v : Vec<&str> = s.split(":").collect();
     if v.len() != 2 {
         return Err(Box::new(CantCastTupleError));
     }
@@ -31,3 +42,4 @@ F2 : Fn(&'_ str, &'_ str, &mut T) -> Result<(), Box<dyn Error>>{
 }   
 
 pub use client_list::parsing_client_list;
+pub use info_cpu::parsing_info_cpu;
