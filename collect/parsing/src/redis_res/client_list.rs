@@ -6,22 +6,22 @@ use crate::errs::CantMappingValueError;
 
 #[derive(Default)]
 pub struct ClientListItem {
-    pub id : u64,
+    pub id : i64,
     pub addr : String,
-    pub fd : u64,
+    pub fd : i64,
     pub name :String,
-    pub age : u64,
-    pub idle : u64,
+    pub age : i64,
+    pub idle : i64,
     pub flags : char,
-    pub db : u64,
-    pub sub : u64, //channel
-    pub psub : u64, //parttern
+    pub db : i64,
+    pub sub : i64, //channel
+    pub psub : i64, //parttern
     pub multi : i32,
-    pub qbuf : u64,
-    pub qbuf_free : u64,
-    pub obl : u64,
-    pub oll : u64,
-    pub omem : u64,
+    pub qbuf : i64,
+    pub qbuf_free : i64,
+    pub obl : i64,
+    pub oll : i64,
+    pub omem : i64,
     pub events : char,
     pub cmd : String
 }
@@ -60,6 +60,7 @@ pub fn parsing_client_list(res : String) -> Result<ClientList, Box<dyn Error>> {
     let mut list = Vec::<ClientListItem>::new();
 
     for line in s.split("\n") {
+        if line == "" {continue;}
         let obj = split_line_and_fold_data(line, split_eq_tuple, mapping_client_list_item)?;
         list.push(obj);
     }

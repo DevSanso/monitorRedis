@@ -38,7 +38,7 @@ pub fn init_logger(cfgs : Vec<LoggerConfig>) -> Result<(), log::SetLoggerError> 
         acc
     });
 
-    loggers.push(TermLogger::new(LevelFilter::Trace, Config::default(), TerminalMode::Mixed, ColorChoice::Never));
+    loggers.push(TermLogger::new(LevelFilter::Debug, Config::default(), TerminalMode::Mixed, ColorChoice::Never));
 
     let ret = CombinedLogger::init(loggers);
     ret

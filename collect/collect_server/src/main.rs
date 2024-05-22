@@ -36,13 +36,13 @@ fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, SqlitePool) {
     (Arc::new(Mutex::new(pg_p)), sqlite_p)
 }
 
-fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(u32,config::DbConnConfig<u32>)>, Box<dyn Error>> {
+fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(i32,config::DbConnConfig<u32>)>, Box<dyn Error>> {
     let mut sql_item = sqlite_p.get()?;
     let sql_conn = sql_item.get_value();
 
     let mut stmt = sql_conn.prepare(dbs_cmd::SQLITE_COMMANDLINE_MAP.get(&dbs_cmd::SQLiteCommand::RedisConnInfo).unwrap())?;
     let ret = stmt.query_map([], |row| {
-        let unqiue_id : u32 = row.get(0)?;
+        let unqiue_id : i32 = row.get(0)?;
         Ok((unqiue_id, config::DbConnConfig::<u32> {
             user : row.get(1)?,
             password : row.get(2)?,
@@ -61,7 +61,7 @@ fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(u32,config::
     Ok(v)
 }
 
-fn make_redis_monitor(v : Vec<(u32,config::DbConnConfig<u32>)>, global_pg_p : &'_ Arc<Mutex<PgPool>>) -> Vec<ThreadExecuter> {
+fn make_redis_monitor(v : Vec<(i32,config::DbConnConfig<u32>)>, global_pg_p : &'_ Arc<Mutex<PgPool>>) -> Vec<ThreadExecuter> {
     let ret : Vec<ThreadExecuter> = v.iter().fold(vec![], |mut acc, x| {
         let conn_info = &x.1;
         let clone_pg_p = Arc::clone(global_pg_p);

@@ -45,31 +45,42 @@ impl RedisRequester {
         }
     }
 
-    fn parsing_args(&self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String,Box<dyn Error>> {
+    fn parsing_args(&self, command : &'_ str, args : &'_ [&'_ str]) -> Result<Vec<String>,Box<dyn Error>> {
         if args.len() != command.matches("?").count() {
             return Err(Box::new(NotMatchArgsLenError));
         }
+        let mut args_index = 0;
+        let mut v = Vec::new();
 
-        if args.len() == 0 {
-            return Ok(String::from(command));
-        }
-        
-        let mut ret = String::new();
-        
-        for arg in args {
-            ret = ret.replacen("?", arg, 1);
+        let mut token = command.split(" ");    
+
+        loop {
+            let t = token.next();
+            if t.is_none() {break}
+
+            let s = t.unwrap();
+            if s == "?" {
+                v.push(String::from(args[args_index]));
+                args_index += 1;
+            }else {
+                v.push(String::from(s));
+            }
         }
 
-        Ok(ret)
+        Ok(v)
     }
 
     pub fn run_command(&mut self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String, Box<dyn Error>> {
         let mut cmd = Cmd::new();
-        if args.len() > 0 {
-            cmd.arg(self.parsing_args(command, args)?);
+        let split_cmd = self.parsing_args(command, args)?;
+
+        for c in split_cmd {
+            cmd.arg(c);
         }
 
-        let ret : String = cmd.query(&mut self.client)?;
+        let mut conn = self.client.get_connection()?;
+
+        let ret : String = cmd.query(&mut conn)?;
         Ok(ret)
     }
 }

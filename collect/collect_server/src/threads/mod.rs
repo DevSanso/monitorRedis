@@ -13,10 +13,10 @@ use dbs::pg_pool::{PgPool, PgUploader};
 use log::*;
 use core::structure::pool::PoolItem;
 
-pub type WorkerFn = &'static (dyn Fn(u32, &'_ mut dbs::redis_pool::RedisRequester, &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> + Send + Sync);
+pub type WorkerFn = &'static (dyn Fn(i32, &'_ mut dbs::redis_pool::RedisRequester, &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> + Send + Sync);
 
 pub struct ThreadExecuter {
-    unqiue_id : u32,
+    unqiue_id : i32,
     redis_p : Arc<Mutex<RedisPool>>,
     pg_p : Arc<Mutex<PgPool>>,
     control_thread_handle : Option<JoinHandle<Result<(), String>>>,
@@ -29,13 +29,13 @@ struct ThreadArgs {
     pub state : Arc<Mutex<bool>>,
     pub pg_p : Arc<Mutex<PgPool>>,
     pub redis_p : Arc<Mutex<RedisPool>>,
-    pub unqiue_id : u32,
+    pub unqiue_id : i32,
     pub worker_name : String,
     pub worker_fn : WorkerFn
 }
 
 impl ThreadExecuter {
-    pub fn new(unqiue_id : u32, redis_p : RedisPool, global_pg_p : Arc<Mutex<PgPool>>, mapping : HashMap<String,(Duration, WorkerFn)>) -> Self {
+    pub fn new(unqiue_id : i32, redis_p : RedisPool, global_pg_p : Arc<Mutex<PgPool>>, mapping : HashMap<String,(Duration, WorkerFn)>) -> Self {
         ThreadExecuter {
             unqiue_id,
             redis_p : Arc::new(Mutex::new(redis_p)),
@@ -53,7 +53,7 @@ impl ThreadExecuter {
         })
     }
 
-    fn run_worker(worker_name : &'_ str, mut r : PoolItem<'_, RedisRequester>, mut p : PoolItem<'_, PgUploader>, unqiue_id : u32, state_used : Arc<Mutex<bool>>, fun : WorkerFn) {
+    fn run_worker(worker_name : &'_ str, mut r : PoolItem<'_, RedisRequester>, mut p : PoolItem<'_, PgUploader>, unqiue_id : i32, state_used : Arc<Mutex<bool>>, fun : WorkerFn) {
         
         {
             let g_used = state_used.lock().unwrap();
@@ -94,7 +94,7 @@ impl ThreadExecuter {
         Ok(())
     }
 
-    fn thread_entry<'a>(unqiue_id : u32, redis_p : Arc<Mutex<RedisPool>>, pg_p : Arc<Mutex<PgPool>>, mapping : HashMap<String,(Duration, WorkerFn)>)  -> Result<(),String>{
+    fn thread_entry<'a>(unqiue_id : i32, redis_p : Arc<Mutex<RedisPool>>, pg_p : Arc<Mutex<PgPool>>, mapping : HashMap<String,(Duration, WorkerFn)>)  -> Result<(),String>{
         let used_states = Self::make_func_state_map(mapping.keys());
         thread::scope(|s| {
             loop {
