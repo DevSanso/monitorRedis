@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"restapi/constant"
 	"restapi/types/core"
@@ -75,4 +76,12 @@ func writeCommonResultFromAppResponse(body any) *core.ApplicationResponse {
 
 func objectToJsonString(obj any) ([]byte, error) {
 	return json.Marshal(obj)
+}
+
+func isYYYYMMDDHHMI24SSFormat(data string) bool {
+	_, err := strconv.Atoi(data)
+	if err != nil && len(data) != 14 {
+		return false
+	}
+	return true
 }

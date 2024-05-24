@@ -17,7 +17,7 @@ type handlerImpl struct{
 
 type CustomHandlerFunc func(r *http.Request) *core.ApplicationResponse
 
-func wrapperCustomHandler( fun CustomHandlerFunc) http.HandlerFunc{
+func wrapperCustomHandler(fun CustomHandlerFunc) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := fun(r)
 
@@ -42,6 +42,7 @@ func NewHandler() http.Handler {
 	impl := new(handlerImpl)
 	
 	impl.mux.HandleFunc("/redis/client", wrapperCustomHandler(clientHandler))
+	impl.mux.HandleFunc("/redis/info", wrapperCustomHandler(infoHandler))
 	return impl
 }
 
@@ -52,6 +53,8 @@ func (impl *handlerImpl)allocService(r *http.Request) bool {
 	switch path {
 	case "client":
 		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, &services.ClientService{}))
+	case "info":
+		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, &services.InfoService{}))
 	default:
 		e := errs.BadRequestError {Ip : r.Host, Url: r.URL.String(), Msg: "not support AllocService"}
 		log.Info(e.Error())
