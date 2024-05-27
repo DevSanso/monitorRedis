@@ -59,12 +59,14 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
 pub enum PgCommand {
     ClientList,
     InfoCpu,
+    InfoStat,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
         let mut pg_commandline_map_internal = HashMap::new();
         pg_commandline_map_internal.insert(PgCommand::ClientList," INSERT INTO redis_client_list   (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd)   VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) ");
         pg_commandline_map_internal.insert(PgCommand::InfoCpu," INSERT INTO redis_info_cpu (   link_key,   collect_time,   used_cpu_sys,   used_cpu_user,   used_cpu_sys_children,   used_cpu_user_children  ) VALUES ( $1, now(), $2, $3, $4, $5) ");
+        pg_commandline_map_internal.insert(PgCommand::InfoStat," INSERT INTO redis_info_stats (   link_key,   collect_time,   total_connections_received,   total_commands_processed,   instantaneous_ops_per_sec,   total_net_input_bytes,   total_net_output_bytes,   instantaneous_input_kbps,   instantaneous_output_kbps,   rejected_connections,   sync_full,   sync_partial_ok,   sync_partial_err,   expired_keys,   evicted_keys,   keyspace_hits,   keyspace_misses,   pubsub_channels,   pubsub_patterns,   latest_fork_usec,   migrate_cached_sockets,   slave_expires_tracked_keys,   active_defrag_hits,   active_defrag_misses,   active_defrag_key_hits,   active_defrag_key_misses   ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) ");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]
