@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use std::time::Duration;
 
-use crate::threads::WorkerFn;
+use crate::typed::WorkerFn;
 
 mod client_list_worker;
 mod info_cpu_worker;

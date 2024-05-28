@@ -11,6 +11,7 @@ dbs = {path = "../dbs"}
 dbs_cmd = {path = "../dbs_cmd"}
 logger = {path = "../logger"}
 parsing = {path = "../parsing"}
+thread_pool = {path = "../thread_pool"}
 
 serde_json = "1.0.116"
 serde = { version = "1.0.198", features = ["derive"] }

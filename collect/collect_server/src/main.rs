@@ -2,6 +2,7 @@ mod config;
 mod worker;
 mod errors;
 mod threads;
+mod typed;
 
 use std::env;
 use std::fs;
@@ -11,19 +12,20 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 
+use serde_json;
+
 use dbs::redis_pool::RedisPool;
 use dbs::sqlite_pool::SqlitePool;
 use dbs::utils::create_redis_url;
-use serde_json;
+use crate::threads::builder::ExectorBulider;
 
 use config::Config;
 use logger::{init_logger, LoggerConfig};
 use dbs::pg_pool::PgPool;
 use dbs::utils::create_pg_url;
-use threads::ThreadExecuter;
 use worker::collect::make_sec_worker;
 
-fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, SqlitePool) {
+fn get_pool(cfg : &Config) -> (PgPool, SqlitePool) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
     cfg.pg_config.password.as_str(), 
     cfg.pg_config.ip.as_str(), 
@@ -33,7 +35,7 @@ fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, SqlitePool) {
     let pg_p = PgPool::new(pg_url);
     let sqlite_p = SqlitePool::new(cfg.sqlite_path.clone());
 
-    (Arc::new(Mutex::new(pg_p)), sqlite_p)
+    (pg_p, sqlite_p)
 }
 
 fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(i32,config::DbConnConfig<u32>)>, Box<dyn Error>> {
@@ -61,28 +63,6 @@ fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(i32,config::
     Ok(v)
 }
 
-fn make_redis_monitor(v : Vec<(i32,config::DbConnConfig<u32>)>, global_pg_p : &'_ Arc<Mutex<PgPool>>) -> Vec<ThreadExecuter> {
-    let ret : Vec<ThreadExecuter> = v.iter().fold(vec![], |mut acc, x| {
-        let conn_info = &x.1;
-        let clone_pg_p = Arc::clone(global_pg_p);
-
-        let redis_p = RedisPool::new(conn_info.ip.clone(),create_redis_url(conn_info.user.as_str(), 
-        conn_info.password.as_str(), conn_info.ip.as_str(), conn_info.port, conn_info.db_name));
-
-        let execute = ThreadExecuter::new(x.0, redis_p, clone_pg_p, make_sec_worker());
-        acc.push(execute);
-        acc
-    });
-
-    ret
-}
-
-fn process_mon_loop() {
-    loop {
-        thread::sleep(Duration::from_secs(60));
-    }
-}
-
 fn get_process_arg() -> Result<String, Box<dyn Error>> {
     let args : Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -99,13 +79,28 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
 
     let redis_list = get_redis_access_datas(&mut pools.1)?;
 
-    let mut execs = make_redis_monitor(redis_list, &pools.0);
+    let mut build = ExectorBulider::new()
+        .set_name("executorCtl")
+        .set_alloc_size(30)
+        .register_pg(pools.0);
 
-    for exec in &mut execs {
-        exec.auto_no_block_run();
+    for r in redis_list {
+        let cfg = r.1;
+        build = build.register_redis(r.0, RedisPool::new(cfg.ip.clone(), 
+            create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name)));
     }
-    
-    process_mon_loop();
+
+    for r in make_sec_worker() {
+        let f_cfg = r.1;
+        build = build.register_worker(r.0, f_cfg.0, f_cfg.1);
+    }
+
+    let mut execute = build.build()?;
+
+    loop {
+        execute.run_workers();
+        thread::sleep(Duration::from_millis(1));
+    }
 
     Ok(())
 }
@@ -118,13 +113,28 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
 
     let redis_list = get_redis_access_datas(&mut pools.1)?;
 
-    let mut execs = make_redis_monitor(redis_list, &pools.0);
+    let mut build = ExectorBulider::new()
+        .set_name("executorCtl")
+        .set_alloc_size(30)
+        .register_pg(pools.0);
 
-    for exec in &mut execs {
-        exec.auto_no_block_run();
+    for r in redis_list {
+        let cfg = r.1;
+        build = build.register_redis(r.0, RedisPool::new(cfg.ip.clone(), 
+            create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name)));
     }
 
-    process_mon_loop();
+    for r in make_sec_worker() {
+        let f_cfg = r.1;
+        build = build.register_worker(r.0, f_cfg.0, f_cfg.1);
+    }
+
+    let mut execute = build.build()?;
+
+    loop {
+        execute.run_workers();
+        thread::sleep(Duration::from_millis(1));
+    }
 
     Ok(())
 }
