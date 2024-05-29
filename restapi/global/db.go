@@ -33,7 +33,7 @@ func InitDb(config *config.ArgsConfig) error {
 	var ret error = nil
 
 	onceInit.Do(func() {
-		sqlPath := path.Join(config.SqllitePath)
+		sqlPath := path.Join(config.SqlitePath)
 
 		info,infoErr := sql.Open("sqlite",fmt.Sprintf("file:%s?cache=shared&mode=ro", sqlPath));
 		if infoErr != nil {

@@ -24,7 +24,22 @@ func (i *internalStdout)Close() error {
 	return nil
 }
 
-func InitLog(level logger.LogLevel, filePath *string) {
+
+func convertLogLevel(level string) logger.LogLevel {
+	switch level {
+	case "trace":
+		return logger.LevelTrace
+	case "info":
+		return logger.LevelInfo
+	case "error":
+		return logger.LevelError
+	default:
+		return logger.LevelNone
+	}
+}
+
+
+func InitLog(level string, filePath *string) {
 	onceLogInit.Do(func() {
 		var w = make([]io.WriteCloser, 0)
 		
@@ -39,7 +54,7 @@ func InitLog(level logger.LogLevel, filePath *string) {
 			}
 		}
 
-		log = logger.NewStdLogger(level, w...)
+		log = logger.NewStdLogger(convertLogLevel(level), w...)
 	})
 }
 
