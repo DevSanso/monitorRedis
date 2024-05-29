@@ -62,5 +62,15 @@ func StdQueryRun[T any](sd *StdDao, query string, gen func(*sql.Rows) ([]T,error
 	ret, retErr := gen(rows)
 	return ret, retErr
 }
+
+func StdQueryOneRun[T any](sd *StdDao, query string, gen func(*sql.Row) (*T,error), args ...any) (*T,error) {
+	ctx := sd.ctx
+	row := sd.conn.QueryRowContext(ctx, query, args)
+	if row.Err() != nil {
+		return nil, nil
+	}
 	
+	ret, retErr := gen(row)
+	return ret, retErr
+}
 

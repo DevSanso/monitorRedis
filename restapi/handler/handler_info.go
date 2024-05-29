@@ -19,6 +19,8 @@ func infoHandler(r *http.Request) *core.ApplicationResponse {
 	switch action {
 	case "cpu":
 		res = service.CpuList(r)
+	case "stats":
+		res = service.Stats(r)
 	default:
 		res = &core.ApplicationResponse{
 			Response: []byte("bad request"),

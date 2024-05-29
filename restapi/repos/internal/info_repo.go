@@ -20,3 +20,41 @@ func InfoRepoGenInfoCpuList(rows *sql.Rows) ([]repo_vo.InfoCpuVO, error) {
 	}
 	return ret,nil
 }
+
+func InfoRepoGenInfoStats(row *sql.Row) (*repo_vo.InfoStatVO, error) {
+	buf := new(repo_vo.InfoStatVO);
+
+	err := row.Scan(
+		&buf.CollectTime,
+		&buf.TotalConnectionsReceived,
+		&buf.TotalCommandsProcessed,
+		&buf.InstantaneousOpsPerSec,
+		&buf.TotalNetInputBytes,
+		&buf.TotalNetOutputBytes,
+		&buf.InstantaneousInputKbps,
+		&buf.InstantaneousOutputKbps,
+		&buf.RejectedConnections,
+		&buf.SyncFull,
+		&buf.SyncPartialOK,
+		&buf.SyncPartialErr,
+		&buf.ExpiredKeys,
+		&buf.EvictedKeys,
+		&buf.KeyspaceHits,
+		&buf.KeyspaceMisses,
+		&buf.PubsubChannels,
+		&buf.PubsubPatterns,
+		&buf.LatestForkUsec,
+		&buf.MigrateCachedSockets,
+		&buf.SlaveExpiresTrackedKeys,
+		&buf.ActiveDefragHits,
+		&buf.ActiveDefragMisses,
+		&buf.ActiveDefragKeyHits,
+		&buf.ActiveDefragKeyMisses,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}

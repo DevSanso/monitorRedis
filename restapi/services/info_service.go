@@ -44,3 +44,35 @@ func (c *InfoService) CpuList(r *http.Request) *core.ApplicationResponse {
 
 	return writeCommonResultFromAppResponse(list)
 }
+
+func (c *InfoService) Stats(r *http.Request) *core.ApplicationResponse {
+	q := r.URL.Query()
+	collectTime := q.Get("collect_time")
+	id := q.Get("object_id")
+	castId, castErr := strconv.Atoi(id)
+
+	if !isYYYYMMDDHHMI24SSFormat(collectTime) {
+		return &core.ApplicationResponse{
+			Response: []byte(""),
+			Code:     400,
+			Err:      &errs.BadRequestError{Ip: r.Host, Url: r.URL.String(), Msg: fmt.Sprintf("time format not matching(time:%s)", collectTime)},
+		}
+	}
+
+	if castErr != nil {
+		return &core.ApplicationResponse{
+			Response: []byte(""),
+			Code:     400,
+			Err:      &errs.BadRequestError{Ip: r.Host, Url: r.URL.String(), Msg: fmt.Sprintf("object_id(%s) can't cast", id)},
+		}
+	}
+
+	infoRepo := repos.NewInfoRepo(r.Context())
+
+	stat, statErr := infoRepo.Stats(castId, collectTime)
+
+	errRes := writeIfCommonErrorFromAppResponse(statErr, r.Host, r.URL.String())
+	if errRes != nil { return errRes }
+
+	return writeCommonResultFromAppResponse(stat)
+}

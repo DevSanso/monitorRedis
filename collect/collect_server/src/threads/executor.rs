@@ -6,7 +6,8 @@ use chrono::Timelike;
 
 use dbs::{pg_pool::PgPool, redis_pool::RedisPool};
 use crate::typed::*;
-use thread_pool::TPool;
+use thread_pool::{TPool,TItem};
+use crate::errors::*;
 
 pub struct ThreadExecutor {
     pub(super) t_pool : TPool<WrapperWorkerArgs>,
@@ -43,7 +44,7 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
                     let mut flag = s.flag.lock().unwrap();
                     *flag = false;
                 }
-                return Err(e);
+                return Err(Box::new(PgPoolGetError(e.to_string())));
             }
         };
 
@@ -54,7 +55,7 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
                     let mut flag = s.flag.lock().unwrap();
                     *flag = false;
                 }
-                return Err(e);
+                return Err(Box::new(RedisPoolGetError(e.to_string())));
             }
         };
 
@@ -72,7 +73,7 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
         }
         
         if let Err(e) = ret {
-            return Err(e);
+            return Err(Box::new(WorkerRetureError(e.to_string())));
         }
     }
 
@@ -91,20 +92,24 @@ impl ThreadExecutor {
 
             if now % interval.as_secs() != 0 { continue; }
             
-            for redis_p in self.redis_ps.iter() {
-                let flag = Arc::clone(&self.running_flags[&(redis_p.0, key.clone())]);
-                let pg = Arc::clone(&self.pg_pool);
-                let redis = Arc::clone(&redis_p.1);
+            {
+                let mut pool_args : Vec<TItem<WrapperWorkerArgs>> = vec![];
+                for redis_p in self.redis_ps.iter() {
+                    let flag = Arc::clone(&self.running_flags[&(redis_p.0, key.clone())]);
+                    let pg = Arc::clone(&self.pg_pool);
+                    let redis = Arc::clone(&redis_p.1);
 
-                let args = Some(WrapperWorkerArgs {
-                    flag : flag,
-                    pg_pool : pg,
-                    redis_pool : redis,
-                    id : redis_p.0,
-                    real_worker_fn : worker
-                });
+                    let args = Some(WrapperWorkerArgs {
+                        flag : flag,
+                        pg_pool : pg,
+                        redis_pool : redis,
+                        id : redis_p.0,
+                        real_worker_fn : worker
+                    });
 
-                self.t_pool.use_pool((args, &wrapper_worker_fn));
+                    pool_args.push((args, &wrapper_worker_fn));
+                }
+                self.t_pool.use_pool_from_vec(pool_args);
             }
         }
     }

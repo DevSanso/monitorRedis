@@ -39,8 +39,6 @@ pub struct InfoStat {
     pub active_defrag_misses : i64,
     pub active_defrag_key_hits : i64,
     pub active_defrag_key_misses : i64
-
-
 }
 
 #[inline]
@@ -73,6 +71,7 @@ fn mapping_info_stat(r : &mut InfoStat, raw_data : &'_ str) -> Result<(), Box<dy
         "active_defrag_misses" => r.active_defrag_misses = s.1.as_str().trim().parse()?,
         "active_defrag_key_hits" => r.active_defrag_key_hits = s.1.as_str().trim().parse()?,
         "active_defrag_key_misses" => r.active_defrag_key_misses = s.1.as_str().trim().parse()?,
+        "instantaneous_ops_per_sec" => r.instantaneous_ops_per_sec = s.1.as_str().trim().parse()?,
         _ => return Err(Box::new(CantMappingValueError::new(String::from(s.0.as_str()))))
     }
 

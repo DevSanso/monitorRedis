@@ -1,6 +1,7 @@
 use std::sync::{Arc,Mutex};
 use std::thread::{self, current};
 use std::time::Duration;
+use std::slice::Iter;
 
 use log;
 
@@ -67,6 +68,16 @@ impl<T> TPool<T> where T : 'static + Send + Sync  {
         }
         let mut g = self.wait_q.lock().unwrap();
         g.push(item);
+    }
+    pub fn use_pool_from_vec(&mut self, mut items : Vec<TItem<T>>) {
+        if is_kill_flag_on(&self.is_kill_thread) {
+            return;
+        }
+
+        let mut g = self.wait_q.lock().unwrap();
+        while let Some(s) = items.pop() {
+            g.push(s);
+        }
     }
 }
 

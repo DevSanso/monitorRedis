@@ -99,7 +99,7 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
 
     loop {
         execute.run_workers();
-        thread::sleep(Duration::from_millis(1));
+        thread::sleep(Duration::from_millis(100));
     }
 
     Ok(())
@@ -133,7 +133,7 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
 
     loop {
         execute.run_workers();
-        thread::sleep(Duration::from_millis(1));
+        thread::sleep(Duration::from_millis(100));
     }
 
     Ok(())

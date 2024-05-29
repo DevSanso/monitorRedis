@@ -30,7 +30,7 @@ macro_rules! impl_error_structure {
     (arg, $name : ident, $descr : expr) => {
         
         #[derive(Debug)]
-        pub struct $name(String);
+        pub struct $name(pub String);
 
         impl $name {
             pub fn new(msg : String) -> Self {
