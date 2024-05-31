@@ -41,26 +41,26 @@ fn get_pool(cfg : &Config) -> (PgPool, SqlitePool) {
 fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(i32,config::DbConnConfig<u32>)>, Box<dyn Error>> {
     let mut sql_item = sqlite_p.get()?;
     let sql_conn = sql_item.get_value();
-
-    let mut stmt = sql_conn.prepare(dbs_cmd::SQLITE_COMMANDLINE_MAP.get(&dbs_cmd::SQLiteCommand::RedisConnInfo).unwrap())?;
-    let ret = stmt.query_map([], |row| {
-        let unqiue_id : i32 = row.get(0)?;
-        Ok((unqiue_id, config::DbConnConfig::<u32> {
-            user : row.get(1)?,
-            password : row.get(2)?,
-            db_name : row.get(3)?,
-            ip : row.get(4)?,
-            port : row.get(5)?
-        }))
-    })?;
-
-    let mut v = Vec::new();
-    for r in ret {
-        let row = r.unwrap();
-        v.push(row);
-    }
+    let ret = sql_conn.query(dbs_cmd::SQLITE_COMMANDLINE_MAP.get(&dbs_cmd::SQLiteCommand::RedisConnInfo).unwrap().to_string(), &[], |x| {
+        let cnt = x.row_len();
+        let mut ret = Vec::new();
+        for row in 0..cnt {
+            let id = x.get_i64_data(row, 0)?.unwrap() as i32;
+            ret.push((
+                id,
+                config::DbConnConfig::<u32> {
+                    user : x.get_str_data(row, 1)?.unwrap(),
+                    password : x.get_str_data(row, 2)?.unwrap(),
+                    db_name : x.get_i64_data(row, 3)?.unwrap() as u32,
+                    ip : x.get_str_data(row, 4)?.unwrap(),
+                    port : x.get_i64_data(row, 5)?.unwrap() as u32
+                }
+            ))
+        }
+        Ok(ret)
+    }, "redis_conn_select");
     
-    Ok(v)
+    ret
 }
 
 fn get_process_arg() -> Result<String, Box<dyn Error>> {

@@ -34,6 +34,8 @@ impl SqliteRows {
         Ok(ret)
     }
 
+    pub fn row_len(&self) -> usize {self.row_size}
+
     fn register_data_type<'a>(refer : &mut Self, col_size : usize, r :&'a Row<'a>) -> Result<(), Box<dyn Error>> {
         for idx in 0..col_size {
             let data = r.get_ref(idx)?;
@@ -255,8 +257,10 @@ mod pool_tests {
                 assert_eq!(x.get_f64_data(0, 1)?, x.get_f64_data(1, 1)?,"2 row not eq");
                 assert_eq!(x.get_str_data(0, 2)?, x.get_str_data(1, 2)?,"3 row not eq");
                 assert_eq!(x.get_str_data(0, 3)?, x.get_str_data(1, 3)?,"4 row not eq");
-
+                assert_eq!(x.row_len(), 2);
                 Ok(())
+
+               
             }, "test")?;
         }
 
