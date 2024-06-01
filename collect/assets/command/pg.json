@@ -43,7 +43,14 @@
 		" active_defrag_misses, ",
 		" active_defrag_key_hits, ",
 		" active_defrag_key_misses ",
-	" ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) "
-]
+	" ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) "]
+    },
+	{
+        "DbSize" : [" INSERT INTO redis_dbsize ( ",
+        " link_key, ",
+        " collect_time, ",
+        " dbname, ",
+        " db_size ",
+        ") VALUES ( $1, now(), $2, $3) "]
     }
 ]

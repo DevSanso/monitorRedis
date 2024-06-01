@@ -1,6 +1,7 @@
 mod client_list;
 mod info_cpu;
 mod info_stat;
+mod db_size;
 
 use std::error::Error;
 use crate::errs::CantCastTupleError;
@@ -45,3 +46,6 @@ F2 : Fn(&'_ str, &'_ str, &mut T) -> Result<(), Box<dyn Error>>{
 pub use client_list::parsing_client_list;
 pub use info_cpu::parsing_info_cpu;
 pub use info_stat::parsing_info_stat;
+
+pub use db_size::parsing_confg_get_databases;
+pub use db_size::parsing_dbsize;

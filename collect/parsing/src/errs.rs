@@ -4,3 +4,4 @@ use core::impl_error_structure;
 
 impl_error_structure!(CantCastTupleError, "this value cant cast tuple");
 impl_error_structure!(arg, CantMappingValueError, "cant mapping this data type");
+impl_error_structure!(ReponseParsingError, "reponse parsing error");
