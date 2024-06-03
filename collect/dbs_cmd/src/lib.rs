@@ -31,7 +31,7 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
         reids_commandline_map_internal.insert(RedisCommand::InfoMemory, "info memeory");
         reids_commandline_map_internal.insert(
             RedisCommand::DbSize,
-            "eval \"redis.call('select',ARGV[1] ); return redis.call('dbsize')\" 0 ?",
+            "eval \"redis.call('select',ARGV[1]); return redis.call('dbsize')\" 0 ?",
         );
         reids_commandline_map_internal.insert(RedisCommand::InfoClients, "info clients");
         reids_commandline_map_internal.insert(RedisCommand::InfoCommandStats, "info commandstats");

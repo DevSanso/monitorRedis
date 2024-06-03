@@ -1,11 +1,11 @@
-use std::error::Error;
+use std::{any::Any, error::Error, fmt::Debug};
 
-use redis::{Client, Cmd, Commands};
+use redis::{Client, Cmd, Commands, FromRedisValue, Value};
 
 use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
-use crate::errs::NotMatchArgsLenError;
+use crate::errs::{NotMatchArgsLenError, NotMatchTypeError, NilDataError};
 pub struct RedisPool {
     pool : Pool<RedisRequester, String>,
     url : String
@@ -49,25 +49,81 @@ impl RedisRequester {
         if args.len() != command.matches("?").count() {
             return Err(Box::new(NotMatchArgsLenError));
         }
+        let mut v: Vec<String> = Vec::new();
+
+        let token = command.as_bytes();   
+        let mut str_buf = String::new();
+        let mut trigger_str = false;
         let mut args_index = 0;
-        let mut v = Vec::new();
 
-        let mut token = command.split(" ");    
-
-        loop {
-            let t = token.next();
-            if t.is_none() {break}
-
-            let s = t.unwrap();
-            if s == "?" {
-                v.push(String::from(args[args_index]));
-                args_index += 1;
-            }else {
-                v.push(String::from(s));
+        for idx in 0..token.len() {
+            if token[idx] == b'\"' && !trigger_str {
+                trigger_str = true;
+                continue;
             }
+
+            if token[idx] != b'\"' && trigger_str {
+                str_buf.push(char::from(token[idx]));
+                continue;
+            }
+
+            if token[idx] == b'\"' && trigger_str {
+                trigger_str = false;
+                v.push(str_buf.clone());
+
+                str_buf.clear();
+                continue;
+            }
+
+            if token[idx] == b' ' {
+                if str_buf.len() > 0 {
+                    v.push(str_buf.clone());
+                    str_buf.clear();
+                    continue;
+                }
+                else {
+                    continue;
+                }
+            }
+
+            if token[idx] == b'?' {
+                str_buf.push_str(args[args_index]);
+                args_index += 1;
+                continue;
+            }
+
+            str_buf.push(char::from(token[idx]));     
         }
 
+        if str_buf.len() > 0 {
+            v.push(str_buf.clone());
+        }
+        
         Ok(v)
+    }
+
+    fn bulk_to_string(v : &Vec<Value>) -> Result<String, Box<dyn Error>> {
+        let mut ret = String::from("");
+
+        for item in v {
+            let cast : String = match item {
+                Value::Bulk(b) => Self::bulk_to_string(b)?,
+                Value::Nil => String::from("\n"),
+                Value::Int(i) => format!("{}\n", i),
+                Value::Status(s) => format!("{}\n", s.as_str()),
+                Value::Okay => String::from("\n"),
+                Value::Data(bin) =>
+                {
+                    let mut temp = String::from_utf8(bin.clone())?;
+                    temp.push_str("\n");
+                    temp
+                }
+            };
+
+            ret.push_str(cast.as_str());
+        }
+
+        Ok(ret)
     }
 
     pub fn run_command(&mut self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String, Box<dyn Error>> {
@@ -77,10 +133,19 @@ impl RedisRequester {
         for c in split_cmd {
             cmd.arg(c);
         }
-
+        
         let mut conn = self.client.get_connection()?;
+        
+        let ret : Value = cmd.query(&mut conn)?;
 
-        let ret : String = cmd.query(&mut conn)?;
-        Ok(ret)
+        let s = match ret {
+            Value::Nil => return Err(Box::new(NilDataError)),
+            Value::Okay => return Err(Box::new(NilDataError)),
+            Value::Status(s) => s,
+            Value::Bulk(v) => Self::bulk_to_string(&v)?,
+            Value::Data(b) => String::from_utf8(b)?,
+            Value::Int(i) => i.to_string()
+        };
+        Ok(s)
     }
 }

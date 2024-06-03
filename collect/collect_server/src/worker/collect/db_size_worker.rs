@@ -7,9 +7,10 @@ use parsing::redis_res::{parsing_confg_get_databases, parsing_dbsize};
 
 pub fn db_size_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> {
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::GetDatabaseCount).unwrap();
+ 
     let result = redis_conn.run_command(cmd, &[])?;
-    
     let dbnums = parsing_confg_get_databases(result)?;
+
     let pg_query = dbs_cmd::PG_COMMANDLINE_MAP.get(&dbs_cmd::PgCommand::DbSize).unwrap();
     let db_size_cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::DbSize).unwrap();
 

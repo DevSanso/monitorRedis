@@ -4,7 +4,7 @@
     {"InfoCpu" :    "info cpu"   },
     {"InfoStat":    "info stats" },
     {"InfoMemory" :"info memeory"},
-    {"DbSize" : "eval \\\"redis.call('select',ARGV[1] ); return redis.call('dbsize')\\\" 0 ?"},
+    {"DbSize" : "eval \\\"redis.call('select',ARGV[1]); return redis.call('dbsize')\\\" 0 ?"},
     {"InfoClients" : "info clients"},
     {"InfoCommandStats" : "info commandstats"},
     {"InfoKeySpace" : "info keyspace"},
