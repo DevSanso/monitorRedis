@@ -8,6 +8,7 @@ mod client_list_worker;
 mod info_cpu_worker;
 mod info_stats_worker;
 mod db_size_worker;
+mod info_commandstats_worker;
 
 
 pub fn make_sec_worker() -> HashMap<String,(Duration, WorkerFn)> {
@@ -17,6 +18,7 @@ pub fn make_sec_worker() -> HashMap<String,(Duration, WorkerFn)> {
     m.insert(String::from("InfoCpu"), (Duration::from_secs(30), &info_cpu_worker::info_cpu_worker));
     m.insert(String::from("InfoStat"), (Duration::from_secs(3600), &info_stats_worker::info_stats_worker));
     m.insert(String::from("DBSize"), (Duration::from_secs(3600), &db_size_worker::db_size_worker));
+    m.insert(String::from("InfoCommandStats"), (Duration::from_secs(60), &info_commandstats_worker::info_commandstats_worker));
     
     m
 }

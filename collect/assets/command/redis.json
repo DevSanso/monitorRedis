@@ -15,5 +15,6 @@
     {"GetRedisLimitMemorySize" : "config get maxmemory"},
     {"GetClusterGenKeySlotSize":"cluster countkeysinslot"},
     {"GetClusterNodes" : "cluster nodes"},
-    {"GetMemoryUsageFromKey" : "MEMORY USAGE ?"}
+    {"GetMemoryUsageFromKey" : "MEMORY USAGE ?"},
+    {"GetAllConfig" : "config get *"}
 ]

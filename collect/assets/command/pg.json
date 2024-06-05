@@ -52,5 +52,15 @@
         " dbname, ",
         " db_size ",
         ") VALUES ( $1, now(), $2, $3) "]
+    },
+    {
+        "InfoCommandStats" : [" INSERT INTO redis_info_commandstats( ",
+        " link_key, ",
+        " collect_time, ",
+        " cmd, ",
+        " calls ",
+        " usec ",
+        " usec_per_call ",
+        ") VALUES ( $1, now(), $2, $3, $4, $5) "]
     }
 ]
