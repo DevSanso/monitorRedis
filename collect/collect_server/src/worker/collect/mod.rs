@@ -9,16 +9,23 @@ mod info_cpu_worker;
 mod info_stats_worker;
 mod db_size_worker;
 mod info_commandstats_worker;
+mod config_get_all_worker;
 
+macro_rules! register_worker_list {
+    ($m : expr, $name: expr, $interval : expr, $func : expr) => {
+        $m.insert(String::from($name), (Duration::from_secs($interval), &$func));
+    };
+}
 
 pub fn make_sec_worker() -> HashMap<String,(Duration, WorkerFn)> {
     let mut m : HashMap<String,(Duration, WorkerFn)> = HashMap::new();
 
-    m.insert(String::from("ClientList"), (Duration::from_secs(10), &client_list_worker::client_list_worker));
-    m.insert(String::from("InfoCpu"), (Duration::from_secs(30), &info_cpu_worker::info_cpu_worker));
-    m.insert(String::from("InfoStat"), (Duration::from_secs(3600), &info_stats_worker::info_stats_worker));
-    m.insert(String::from("DBSize"), (Duration::from_secs(3600), &db_size_worker::db_size_worker));
-    m.insert(String::from("InfoCommandStats"), (Duration::from_secs(60), &info_commandstats_worker::info_commandstats_worker));
+    register_worker_list!(m, "ClientList", 10, client_list_worker::client_list_worker);
+    register_worker_list!(m, "InfoCpu", 30, info_cpu_worker::info_cpu_worker);
+    register_worker_list!(m, "InfoStat", 60, info_stats_worker::info_stats_worker);
+    register_worker_list!(m, "DBSize", 60, db_size_worker::db_size_worker);
+    register_worker_list!(m, "InfoCommandStats", 60, info_commandstats_worker::info_commandstats_worker);
+    register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::client_list_worker);
     
     m
 }

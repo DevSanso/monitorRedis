@@ -62,5 +62,19 @@
         " usec ",
         " usec_per_call ",
         ") VALUES ( $1, now(), $2, $3, $4, $5) "]
+    },
+    {
+        "ConfigAll" : [" INSERT INTO redis_config_all( ",
+        " link_key, ",
+        " collect_time, ",
+        " name, ",
+        " value )",
+        " VALUES ( ",
+        " $1, now(), $2, $3 )",
+        " ON CONFLICT(link_key, name, collect_time) ",
+        " DO UPDATE ",
+        " collect_time = now(), ",
+        " value = $3 "
+        ]
     }
 ]
