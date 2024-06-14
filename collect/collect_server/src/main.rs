@@ -23,7 +23,7 @@ use config::Config;
 use logger::{init_logger, LoggerConfig};
 use dbs::pg_pool::PgPool;
 use dbs::utils::create_pg_url;
-use worker::collect::make_sec_worker;
+use worker::collect::make_one_collect_worker;
 
 fn get_pool(cfg : &Config) -> (PgPool, SqlitePool) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
@@ -90,7 +90,7 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
             create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name)));
     }
 
-    for r in make_sec_worker() {
+    for r in make_one_collect_worker() {
         let f_cfg = r.1;
         build = build.register_worker(r.0, f_cfg.0, f_cfg.1);
     }
@@ -124,7 +124,7 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
             create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name)));
     }
 
-    for r in make_sec_worker() {
+    for r in make_one_collect_worker() {
         let f_cfg = r.1;
         build = build.register_worker(r.0, f_cfg.0, f_cfg.1);
     }

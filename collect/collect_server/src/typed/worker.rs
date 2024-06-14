@@ -4,7 +4,7 @@ use std::error::Error;
 use dbs::pg_pool::PgPool;
 use dbs::redis_pool::RedisPool;
 
-pub type WorkerFn = &'static (dyn Fn(i32, &'_ mut dbs::redis_pool::RedisRequester, &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> + Send + Sync);
+pub type WorkerFn = &'static (dyn Fn(i32, &'_ mut dbs::redis_pool::RedisRequester, &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> + Send + Sync);
 pub struct WrapperWorkerArgs {
     pub flag : Arc<Mutex<bool>>,
     pub pg_pool : Arc<Mutex<PgPool>>,

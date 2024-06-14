@@ -66,7 +66,7 @@
     {
         "ConfigAll" : [" INSERT INTO redis_config_all( ",
         " link_key, ",
-        " collect_time, ",
+        " sync_time, ",
         " name, ",
         " value )",
         " VALUES ( ",
@@ -75,6 +75,19 @@
         " DO UPDATE ",
         " collect_time = now(), ",
         " value = $3 "
+        ]
+    },
+    {
+        "PingUpdate" : [" INSERT INTO redis_ping_status( ",
+        " link_key, ",
+        " sync_time, ",
+        " status )",
+        " VALUES ( ",
+        " $1, now(), $2)",
+        " ON CONFLICT(link_key) ",
+        " DO UPDATE ",
+        " collect_time = now(), ",
+        " status = $2"
         ]
     }
 ]

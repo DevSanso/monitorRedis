@@ -1,17 +1,18 @@
 use std::error::Error;
 
 use dbs;
+use dbs::pg_pool::PgUploader;
 use dbs_cmd;
 
 use parsing::redis_res::parsing_client_list;
 
-pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgUploader) -> Result<(),Box<dyn Error>> {
+pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::ClientList).unwrap();
     let result = redis_conn.run_command(cmd, &[])?;
     
     let list = parsing_client_list(result)?;
     let mut client_iter = list.iter();
-    
+
     let mut t = pg_conn.trans()?;
     let pg_query = dbs_cmd::PG_COMMANDLINE_MAP.get(&dbs_cmd::PgCommand::ClientList).unwrap();
     

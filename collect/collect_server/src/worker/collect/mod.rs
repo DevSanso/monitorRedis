@@ -17,7 +17,7 @@ macro_rules! register_worker_list {
     };
 }
 
-pub fn make_sec_worker() -> HashMap<String,(Duration, WorkerFn)> {
+pub fn make_one_collect_worker() -> HashMap<String,(Duration, WorkerFn)> {
     let mut m : HashMap<String,(Duration, WorkerFn)> = HashMap::new();
 
     register_worker_list!(m, "ClientList", 10, client_list_worker::client_list_worker);
@@ -28,4 +28,8 @@ pub fn make_sec_worker() -> HashMap<String,(Duration, WorkerFn)> {
     register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::client_list_worker);
     
     m
+}
+
+pub fn make_all_sync_worker() {
+    
 }
