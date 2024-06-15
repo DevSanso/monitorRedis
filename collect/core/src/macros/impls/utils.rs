@@ -1,24 +1,4 @@
 #[macro_export]
-macro_rules! utils_new_error {
-    ($category : ident, $err_structure:ident, $msg :expr) => {
-            {
-                use core::errs;
-                Err(Box::new(errs::$category::$err_structure::new(format!("(pos:{}:{}:{}, hint:{})",file!(), module_path!(), line!(), $msg))))
-            }
-    };
-}
-
-#[macro_export]
-macro_rules! utils_inherit_error {
-    ($category : ident, $err_structure:ident, $msg :expr, $source_err : expr) => {
-        {
-            use core::errs;
-            Err(Box::new(errs::$category::$err_structure::new(format!("(pos:{}:{}:{}, hint:{}, origin:{})",file!(), module_path!(), line!(), $msg, $source_err.to_string()))))
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! func {
     () => {
         {
@@ -32,11 +12,34 @@ macro_rules! func {
     };
 }
 
+#[macro_export]
+macro_rules! utils_new_error {
+    ($category : ident, $err_structure:ident, $msg :expr) => {
+            {
+                use core::errs;
+                use core::func;
+                Err(Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}] : {}", func!(), file!(), line!(), $msg))))
+            }
+    };
+}
+
+#[macro_export]
+macro_rules! utils_inherit_error {
+    ($category : ident, $err_structure:ident, $msg :expr, $source_err : expr) => {
+        {
+            use core::errs;
+            use core::func;
+            Err(Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}] : {}, {}", func!(), file!(), line!(), $msg, $source_err.to_string()))))
+        }
+    };
+}
+
 macro_rules! utils_new_error_crate {
     ($category : ident, $err_structure:ident, $msg :expr) => {
             {
                 use crate::errs;
-                Err(Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}, {}] : {}", crate::func!(), file!(), line!(), module_path!(), $msg))))
+                use crate::func;
+                Err(Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}, {}] : {}", func!(), file!(), line!(), module_path!(), $msg))))
             }
     };
 }

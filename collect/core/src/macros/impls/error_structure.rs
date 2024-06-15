@@ -8,7 +8,7 @@ macro_rules! impl_error {
 
         impl Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{} => message : {}, arg : {}", stringify!($name), $message, self.1)
+                write!(f, "{}:{} => {}", stringify!($name), self.2, $message )
             }
         }
 

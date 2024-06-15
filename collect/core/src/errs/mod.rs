@@ -10,7 +10,9 @@ impl_err_mod!(data, [
 impl_err_mod!(connection, [
     (GetConnectionFailedError, "get other process connection", "check other process state"),
     (NotMatchArgsLenError, "query bound args count not mathcing", "query parameter length not maching, check bound varibles"),
-    (ResponseScanError, "connection response data read error", "check server state or error handling code")
+    (ResponseScanError, "connection response data read error", "check server state or error handling code"),
+    (CommandRunError, "running command or query is error", "check query or command"),
+    (ConnectionApiCallError, "connection api function return error", "check server env or process state")
 ]);
 
 impl_err_mod!(fetch, [
