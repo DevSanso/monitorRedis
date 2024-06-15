@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{collections::VecDeque};
 use std::error::Error;
 
-use super::errs::{MaxSizedError, GenResultIsNoneError};
+use crate::macros::utils_new_error_crate;
 
 pub struct PoolItem<'a,T> {
     value : Option<T>,
@@ -160,12 +160,12 @@ impl<T,P> Pool<T,P> {
                 if self.alloc_size < self.max_size {
                     let gen_item = (self.gen)(p);
                 if gen_item.is_none() {
-                    return Err(Box::new(GenResultIsNoneError::new(self.pool_name.clone())));
+                    return utils_new_error_crate!(proc, GenResultIsNoneError, self.pool_name.clone());
                 }
                 self.items.push_back(gen_item.unwrap());
                 self.alloc_size += 1;
                 } else {
-                    return Err(Box::new(MaxSizedError::new(self.pool_name.clone())));
+                    return utils_new_error_crate!(proc, MaxSizedError, self.pool_name.clone());
                 }
             }
         }   

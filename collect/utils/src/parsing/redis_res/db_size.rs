@@ -1,19 +1,19 @@
 use std::error::Error;
 
-use crate::errs::ReponseParsingError;
+use core::utils_new_error;
 
 pub fn parsing_confg_get_databases(res : String) -> Result<i64, Box<dyn Error>> {
     let v : Vec<&str> = res.split("\n").collect();
     if v.len() < 2 {
-        return Err(Box::new(ReponseParsingError));
+        return  utils_new_error!(data, GetDataCastError, res);
     }
 
     if v[0] != "databases" {
-        return Err(Box::new(ReponseParsingError));
+        return utils_new_error!(data, CantMappingKeyError, v[0]);
     }
     let parse = v[1].parse::<i64>();
     if parse.is_err() {
-        return Err(Box::new(ReponseParsingError));
+        return utils_new_error!(data, GetDataCastError, format!("database config cast error[{}]", v[1]));
     }
 
     Ok(parse.unwrap())

@@ -1,12 +1,14 @@
+
+
 macro_rules! impl_error {
-    ($name : ident, $message:expr, $descr : expr) => {
+    ($category:ident ,$name : ident, $message:expr, $descr : expr) => {
         
         #[derive(Debug)]
-        pub struct $name;
+        pub struct $name(&'static str, &'static str, String);
 
         impl Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", stringify!($name))
+                write!(f, "{} => message : {}, arg : {}", stringify!($name), $message, self.1)
             }
         }
 
@@ -24,10 +26,15 @@ macro_rules! impl_error {
             }
         }
 
+        impl $name {
+            pub fn new(sub_msg : String) -> Self {
+                $name(stringify!($category), $message, sub_msg)
+            }
+        }
+
     };
 }
 
-#[macro_export]
 macro_rules! impl_err_mod {
     ($name:ident, [$((
         $err_name:ident, $message:expr, $descr:expr)),*
@@ -37,11 +44,14 @@ macro_rules! impl_err_mod {
             use std::fmt::Display;
             use std::fmt::Debug;
 
-            $(impl_error!($err_name, $message, $descr);)*
+            use crate::macros::impl_error;
 
+            $(impl_error!($name, $err_name, $message, $descr);)*
         }
     }
 }
 
+pub(crate) use impl_error;
+pub(crate) use impl_err_mod;
 
 

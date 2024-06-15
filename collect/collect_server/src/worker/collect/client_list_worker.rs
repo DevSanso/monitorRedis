@@ -4,7 +4,7 @@ use dbs;
 use dbs::pg_pool::PgUploader;
 use dbs_cmd;
 
-use parsing::redis_res::parsing_client_list;
+use utils::parsing::redis_res::parsing_client_list;
 
 pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::ClientList).unwrap();

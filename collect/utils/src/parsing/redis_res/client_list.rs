@@ -1,8 +1,9 @@
 use std::error::Error;
+use std::num::ParseIntError;
 
-use crate::redis_res::split_eq_tuple;
-use crate::redis_res::split_line_and_fold_data;
-use crate::errs::CantMappingValueError;
+use crate::parsing::common::*;
+use core::utils_new_error;
+use core::utils_inherit_error;
 
 #[derive(Default)]
 pub struct ClientListItem {
@@ -49,7 +50,8 @@ fn mapping_client_list_item(key : &'_ str, value : &'_ str, refer : &mut ClientL
         "omem" => refer.omem = value.parse()?,
         "events" => refer.events = value.chars().next().unwrap(),
         "cmd" => refer.cmd = String::from(value),
-        _ => return Err(Box::new(CantMappingValueError::new(String::from(key))))
+        
+        _ => return utils_new_error!(data, CantMappingKeyError, key)
     }
 
     Ok(())
@@ -61,8 +63,19 @@ pub fn parsing_client_list(res : String) -> Result<ClientList, Box<dyn Error>> {
 
     for line in s.split("\n") {
         if line == "" {continue;}
-        let obj = split_line_and_fold_data(line, split_eq_tuple, mapping_client_list_item)?;
-        list.push(obj);
+        let obj = split_line_and_fold_data(line, split_eq_tuple, mapping_client_list_item);
+        if obj.is_err() {
+            let err = obj.err().unwrap();
+            
+            if err.is::<ParseIntError>() {
+                return utils_inherit_error!(data, GetDataCastError, "", err);
+            }
+            else {
+                return Err(err);
+            }
+        }else {
+            list.push(obj.unwrap());
+        }
     }
 
     Ok(list)

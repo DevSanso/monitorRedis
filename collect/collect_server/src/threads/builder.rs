@@ -7,7 +7,7 @@ use crate::threads::executor::ThreadExecutor;
 use dbs::{pg_pool::PgPool, redis_pool::RedisPool};
 use crate::typed::*;
 use thread_pool::TPool;
-use crate::threads::errs::BuilderPgPoolNoneErr;
+use core::utils_new_error;
 
 pub struct ExectorBulider {
     redis_ps : Vec<(i32, Arc<Mutex<RedisPool>>)>,
@@ -78,7 +78,7 @@ impl ExectorBulider {
         }); 
 
         if self.pg_pool.is_none() {
-            return Err(Box::new(BuilderPgPoolNoneErr));
+            return utils_new_error!(proc, NoneDataError, "pg_pool");
         }
 
         let ret = ThreadExecutor {

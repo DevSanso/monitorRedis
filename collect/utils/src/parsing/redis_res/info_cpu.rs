@@ -1,7 +1,8 @@
 use std::error::Error;
 
-use super::split_colon_tuple;
-use crate::errs::CantMappingValueError;
+use crate::parsing::common::*;
+use core::utils_new_error;
+use core::utils_inherit_error;
 /*
 # CPU
 used_cpu_sys:1.944891
@@ -28,7 +29,7 @@ fn mapping_info_cpu(r : &mut InfoCpu, raw_data : &'_ str) -> Result<(), Box<dyn 
         "used_cpu_user" => r.cpu_user = s.1.as_str().trim().parse()?,
         "used_cpu_sys_children" => r.child_cpu_sys = s.1.as_str().trim().parse()?,
         "used_cpu_user_children" => r.child_cpu_user = s.1.as_str().trim().parse()?,
-        _ => return Err(Box::new(CantMappingValueError::new(String::from(s.0.as_str()))))
+        _ => return utils_new_error!(data, CantMappingKeyError, s.0.as_str())
     }
 
     Ok(())
@@ -40,8 +41,16 @@ pub fn parsing_info_cpu(res : String) -> Result<InfoCpu, Box<dyn Error>> {
 
     for line in s.split("\n").skip(1) {
         if line == "" {continue;}
-        mapping_info_cpu(&mut o, line)?;
+        let ret = mapping_info_cpu(&mut o, line);
 
+        if ret.is_err() {
+            let err = ret.err().unwrap();
+            if !err.is::<core::errs::data::CantMappingKeyError>() {
+                return utils_inherit_error!(data, GetDataCastError, "", err);
+            }
+
+            return Err(err);
+        }
     }
 
     Ok(o)
