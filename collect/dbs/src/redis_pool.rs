@@ -5,7 +5,9 @@ use redis::{Client, Cmd, Commands, FromRedisValue, Value};
 use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
-use crate::errs::{NotMatchArgsLenError, NotMatchTypeError, NilDataError};
+use core::utils_inherit_error;
+use core::utils_new_error;
+
 pub struct RedisPool {
     pool : Pool<RedisRequester, String>,
     url : String
@@ -46,8 +48,9 @@ impl RedisRequester {
     }
 
     fn parsing_args(&self, command : &'_ str, args : &'_ [&'_ str]) -> Result<Vec<String>,Box<dyn Error>> {
-        if args.len() != command.matches("?").count() {
-            return Err(Box::new(NotMatchArgsLenError));
+        let param_count = command.matches("?").count();
+        if args.len() != param_count {
+            return utils_new_error!(connection, NotMatchArgsLenError, format!("{}:{}", args.len(), param_count));
         }
         let mut v: Vec<String> = Vec::new();
 
@@ -114,9 +117,17 @@ impl RedisRequester {
                 Value::Okay => String::from("\n"),
                 Value::Data(bin) =>
                 {
-                    let mut temp = String::from_utf8(bin.clone())?;
-                    temp.push_str("\n");
-                    temp
+                    let temp = String::from_utf8(bin.clone());
+                    
+                    if temp.is_err() {
+
+                        return utils_new_error!(data, EncodingCastError, "");
+                    }
+                    else {
+                        let mut s = temp.unwrap();
+                        s.push_str("\n");
+                        s
+                    }
                 }
             };
 
@@ -134,13 +145,19 @@ impl RedisRequester {
             cmd.arg(c);
         }
         
-        let mut conn = self.client.get_connection()?;
+        let mut conn = {
+            let c = self.client.get_connection();
+            if c.is_err() {
+                return utils_inherit_error!(connection, GetConnectionFailedError, "", c.err().unwrap());
+            }
+            c.unwrap()
+        };
         
         let ret : Value = cmd.query(&mut conn)?;
 
         let s = match ret {
-            Value::Nil => return Err(Box::new(NilDataError)),
-            Value::Okay => return Err(Box::new(NilDataError)),
+            Value::Nil => return utils_new_error!(fetch, NilDataError, ""),
+            Value::Okay => return utils_new_error!(fetch, NilDataError, ""),
             Value::Status(s) => s,
             Value::Bulk(v) => Self::bulk_to_string(&v)?,
             Value::Data(b) => String::from_utf8(b)?,

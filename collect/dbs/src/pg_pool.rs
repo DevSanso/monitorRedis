@@ -4,7 +4,7 @@ use postgres::{self, Row, Transaction};
 use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
-
+use core::utils_inherit_error;
 pub struct PgPool {
     pool : Pool<PgConnecter, String>,
     url : String
@@ -42,8 +42,13 @@ impl<'a> PgTrans<'a> {
         self.raw.rollback()
     }
     pub fn execute(&mut self, query : &'_ str, param : &'_ [&(dyn postgres::types::ToSql + Sync)]) -> Result<u64, Box<dyn Error>> {
-        let ret = self.raw.execute(query, param)?;
-        Ok(ret)
+        let ret = self.raw.execute(query, param);
+
+        if ret.is_err() {
+            return utils_inherit_error!(connection, CommandRunError, "execute[trans]", ret.err().unwrap());
+        }
+
+        Ok(ret.unwrap())
     }
     pub fn commit(self) -> Result<(), impl Error> {
         self.raw.commit()
@@ -89,9 +94,13 @@ pub trait PgSelecter {
 
 impl PgSelecter for PgConnecter {
     fn query(&mut self, query : &'_ str, param : &'_ [&(dyn postgres::types::ToSql + Sync)]) -> Result<PgRows, Box<dyn Error>> {
-        let rs = self.client.query(query, param)?;
+        let rs = self.client.query(query, param);
 
-        Ok(PgRows::new(rs))
+        if rs.is_err() {
+            return utils_inherit_error!(connection, CommandRunError, "query", rs.err().unwrap());
+        }
+
+        Ok(PgRows::new(rs.unwrap()))
     }
 }
 
@@ -103,13 +112,23 @@ pub trait PgUploader {
 
 impl PgUploader for PgConnecter {
     fn execute(&mut self, query : &'_ str, param : &'_ [&(dyn postgres::types::ToSql + Sync)]) -> Result<u64, Box<dyn Error>> {
-        let ret = self.client.execute(query, param)?;
-        Ok(ret)
+        let ret = self.client.execute(query, param);
+        
+        if ret.is_err() {
+            return utils_inherit_error!(connection, CommandRunError, "execute", ret.err().unwrap());
+        }
+
+        Ok(ret.unwrap())
     }
 
     fn trans(&mut self) -> Result<PgTrans<'_>, Box<dyn Error>>{
-        let t = self.client.transaction()?;
-        Ok(PgTrans{ raw : t})
+        let t = self.client.transaction();
+        
+        if t.is_err() {
+            return utils_inherit_error!(connection, ConnectionApiCallError, "transcation", t.err().unwrap());
+        }
+        
+        Ok(PgTrans{ raw : t.unwrap()})
     }
 }
 

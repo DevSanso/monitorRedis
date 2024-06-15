@@ -1,7 +1,7 @@
 use std::error::Error;
 
-use super::split_colon_tuple;
-use crate::errs::CantMappingValueError;
+use crate::parsing::common::*;
+use core::{errs::data::CantMappingKeyError, utils_new_error, utils_inherit_error};
 /*
 # CPU
 used_cpu_sys:1.944891
@@ -72,7 +72,7 @@ fn mapping_info_stat(r : &mut InfoStat, raw_data : &'_ str) -> Result<(), Box<dy
         "active_defrag_key_hits" => r.active_defrag_key_hits = s.1.as_str().trim().parse()?,
         "active_defrag_key_misses" => r.active_defrag_key_misses = s.1.as_str().trim().parse()?,
         "instantaneous_ops_per_sec" => r.instantaneous_ops_per_sec = s.1.as_str().trim().parse()?,
-        _ => return Err(Box::new(CantMappingValueError::new(String::from(s.0.as_str()))))
+        _ => return utils_new_error!(data, CantMappingKeyError, s.0.as_str())
     }
 
     Ok(())
@@ -84,7 +84,15 @@ pub fn parsing_info_stat(res : String) -> Result<InfoStat, Box<dyn Error>> {
 
     for line in s.split("\n").skip(1) {
         if line == "" {continue;}
-        mapping_info_stat(&mut o, line)?;
+        let ret = mapping_info_stat(&mut o, line);
+
+        if ret.is_err() {
+            let err = ret.err().unwrap();
+            if !err.is::<CantMappingKeyError>() {
+                return utils_inherit_error!(data, GetDataCastError, "", err);
+            }
+            return Err(err);
+        }
     }
 
     Ok(o)

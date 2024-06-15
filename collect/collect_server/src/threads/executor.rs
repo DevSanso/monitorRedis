@@ -7,7 +7,7 @@ use chrono::Timelike;
 use dbs::{pg_pool::PgPool, redis_pool::RedisPool};
 use crate::typed::*;
 use thread_pool::{TPool,TItem};
-use crate::errors::*;
+use core::utils_new_error;
 
 pub struct ThreadExecutor {
     pub(super) t_pool : TPool<WrapperWorkerArgs>,
@@ -20,7 +20,7 @@ pub struct ThreadExecutor {
 
 fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error>> {
     if arg.is_none() {
-        return Err(Box::new(crate::errors::WrapperNoneArgsError));
+        return utils_new_error!(proc, CriticalError, "wrapper worker args is none")
     }
 
     let s = arg.unwrap();
@@ -44,7 +44,7 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
                     let mut flag = s.flag.lock().unwrap();
                     *flag = false;
                 }
-                return Err(Box::new(PgPoolGetError(e.to_string())));
+                return utils_new_error!(proc, PoolGetItemError, format!("pg_pool[{}]", s.id));
             }
         };
 
@@ -55,7 +55,7 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
                     let mut flag = s.flag.lock().unwrap();
                     *flag = false;
                 }
-                return Err(Box::new(RedisPoolGetError(e.to_string())));
+                return utils_new_error!(proc, PoolGetItemError, format!("redis_pool[{}]", s.id));
             }
         };
 
@@ -72,8 +72,8 @@ fn wrapper_worker_fn(arg : Option<WrapperWorkerArgs>) -> Result<(),Box<dyn Error
             *flag = false;
         }
         
-        if let Err(e) = ret {
-            return Err(Box::new(WorkerRetureError(e.to_string())));
+        if ret.is_err() {
+            return ret;
         }
     }
 

@@ -3,7 +3,7 @@ use std::error::Error;
 use dbs::{self, pg_pool::PgUploader};
 use dbs_cmd;
 
-use parsing::redis_res::parsing_info_stat;
+use utils::parsing::redis_res::parsing_info_stat;
 use dbs::utils::make_pg_numeric;
 
 pub fn info_stats_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {

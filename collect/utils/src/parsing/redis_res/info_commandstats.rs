@@ -1,7 +1,9 @@
-use std::{error::Error, str::Split};
+use std::{error::Error, num::{ParseFloatError, ParseIntError}, str::Split};
 
-use super::split_colon_tuple;
-use crate::errs::CantMappingValueError;
+use crate::parsing::common::*;
+
+use core::utils_new_error;
+use core::utils_inherit_error;
 
 #[derive(Default, Debug)]
 pub struct CommandStat {
@@ -19,7 +21,7 @@ pub fn parsing_commandstat_datas(cmd : String, datas : Split<&'_ str>) -> Result
             "calls" => c.calls = data.parse()?,
             "usec" => c.usec = data.parse()?,
             "usec_per_call" => c.usec_per_call = data.parse()?,
-            _ =>  return Err(Box::new(CantMappingValueError::new(String::from(data))))
+            _ =>  return utils_new_error!(data, CantMappingKeyError, data)
         }
     }
 
@@ -38,8 +40,20 @@ pub fn parsing_info_commandstats(res : String) -> Result<Vec<CommandStat>, Box<d
     for stri in split {
         let temp = split_colon_tuple(stri)?;
         let datas = temp.1.split(",");
-        let obj = parsing_commandstat_datas(temp.0, datas)?;
-        v.push(obj);
+        let obj = parsing_commandstat_datas(temp.0, datas);
+
+        if obj.is_err() {
+            let err = obj.err().unwrap();
+            if err.is::<ParseFloatError>() || err.is::<ParseIntError>() {
+                return utils_inherit_error!(data, GetDataCastError, "", err);
+            }
+            else {
+                return Err(err);
+            }
+        }
+        else {
+            v.push(obj.unwrap());
+        }
     }
 
     Ok(v)

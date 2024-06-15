@@ -7,7 +7,9 @@ use rusqlite::types::{ToSql, ToSqlOutput, Type, Value, ValueRef};
 use log::*;
 
 use core::structure::pool::{Pool, PoolItem};
-use crate::errs::{NotMatchTypeError, RowIdxNotExistError, RowGetDataInternalError};
+
+use core::utils_inherit_error;
+use core::utils_new_error;
 
 #[derive(Default)]
 pub struct SqliteRows {
@@ -21,7 +23,13 @@ impl SqliteRows {
     pub(super) fn new<'a>(mut rs : Rows<'a>, cols_size : usize, syntax : &'static str) -> Result<SqliteRows, Box<dyn Error>> {
         let mut ret = Self::default();
         let mut row_idx : usize = 0;
-        while let Some(s) = rs.next()? {
+        while let Some(s) = {
+            let r = rs.next();
+            if r.is_err() {
+                return utils_inherit_error!(connection, ResponseScanError, "", r.err().unwrap());
+            }
+            r.unwrap()
+        } {
             if row_idx == 0 {Self::register_data_type(&mut ret, cols_size, s)?;}
 
             Self::register_data(&mut ret, row_idx, cols_size,  s)?;
@@ -53,7 +61,7 @@ impl SqliteRows {
             let left_data_type = &refer.col_data_type[&idx];
 
             if *left_data_type != data_type {
-                return Err(Box::new(NotMatchTypeError(format!("{}:{}", left_data_type.to_string(), data_type.to_string()))));
+                return utils_new_error!(data, GetDataCastError, format!("{}:{}", left_data_type.to_string(), data_type.to_string()));
             }
 
             let raw_data = Self::get_tosql(&data, data_type)?;
@@ -77,12 +85,12 @@ impl SqliteRows {
    pub fn get_i64_data(&self, row_idx : usize, col_idx : usize) -> Result<Option<i64>, Box<dyn Error>> {
         let t = &self.col_data_type[&col_idx];
         if *t != Type::Integer && *t != Type::Null {
-            return Err(Box::new(NotMatchTypeError(format!("{}[{}:{}]", self.syntax, row_idx, col_idx))));
+            return utils_new_error!(data, GetDataCastError, format!("{}[{}:{}]", self.syntax, row_idx, col_idx));
         }
         
         let data = match self.cache.get(&(row_idx, col_idx)) {
             Some(s) => s,
-            None => return Err(Box::new(RowIdxNotExistError))
+            None => return utils_new_error!(proc, CriticalError, format!("get data is None, critical code error [{}:{}],", row_idx, col_idx))
         };
 
         if *t == Type::Null {
@@ -92,13 +100,13 @@ impl SqliteRows {
         let to_sql = data.as_ref().unwrap();
         let output = match to_sql.to_sql().unwrap() {
             ToSqlOutput::Owned(val) => val,
-            _ => return Err(Box::new(RowGetDataInternalError))
+            _ => return utils_new_error!(proc, CriticalError, format!("get sql data enum not matching, check code [{}:{}],", row_idx, col_idx))
         };
 
         let ret : Option<i64> = match output {
             Value::Integer(i) => Some(i),
             Value::Null => None,
-            _ => return Err(Box::new(RowGetDataInternalError))
+            _ => return utils_new_error!(proc, CriticalError, format!("col data is not integer, check code [{}:{}],", row_idx, col_idx))
         };
 
         Ok(ret)
@@ -107,12 +115,12 @@ impl SqliteRows {
     pub fn get_f64_data(&self, row_idx : usize, col_idx : usize) -> Result<Option<f64>, Box<dyn Error>> {
         let t = &self.col_data_type[&col_idx];
         if *t != Type::Real && *t != Type::Null {
-            return Err(Box::new(NotMatchTypeError(format!("{}[{}:{}]", self.syntax, row_idx, col_idx))));
+            return utils_new_error!(data, GetDataCastError, format!("{}[{}:{}]", self.syntax, row_idx, col_idx));
         }
         
         let data = match self.cache.get(&(row_idx, col_idx)) {
             Some(s) => s,
-            None => return Err(Box::new(RowIdxNotExistError))
+            None => return utils_new_error!(proc, CriticalError, format!("get data is None, critical code error [{}:{}],", row_idx, col_idx))
         };
 
         if *t == Type::Null {
@@ -122,13 +130,13 @@ impl SqliteRows {
         let to_sql = data.as_ref().unwrap();
         let output = match to_sql.to_sql().unwrap() {
             ToSqlOutput::Owned(val) => val,
-            _ => return Err(Box::new(RowGetDataInternalError))
+            _ => return utils_new_error!(proc, CriticalError, format!("get sql data enum not matching, check code [{}:{}],", row_idx, col_idx))
         };
 
         let ret : Option<f64> = match output {
             Value::Real(i) => Some(i),
             Value::Null => None,
-            _ => return Err(Box::new(RowGetDataInternalError))
+            _ =>  return utils_new_error!(proc, CriticalError, format!("col data is not float, check code [{}:{}],", row_idx, col_idx))
         };
 
         Ok(ret)
@@ -137,12 +145,12 @@ impl SqliteRows {
     pub fn get_str_data(&self, row_idx : usize, col_idx : usize) -> Result<Option<String>, Box<dyn Error>> {
         let t = &self.col_data_type[&col_idx];
         if *t != Type::Text && *t != Type::Null {
-            return Err(Box::new(NotMatchTypeError(format!("{}[{}:{}]", self.syntax, row_idx, col_idx))));
+            return utils_new_error!(data, GetDataCastError, format!("{}[{}:{}]", self.syntax, row_idx, col_idx));
         }
         
         let data = match self.cache.get(&(row_idx, col_idx)) {
             Some(s) => s,
-            None => return Err(Box::new(RowIdxNotExistError))
+            None => return utils_new_error!(proc, CriticalError, format!("get data is None, critical code error [{}:{}],", row_idx, col_idx))
         };
 
         if *t == Type::Null {
@@ -152,10 +160,16 @@ impl SqliteRows {
         let to_sql = data.as_ref().unwrap();
         let output = match to_sql.to_sql().unwrap() {
             ToSqlOutput::Borrowed(r) => r,
-            _ => return Err(Box::new(RowGetDataInternalError))
+            _ => return utils_new_error!(proc, CriticalError, format!("get sql data enum not matching, check code [{}:{}],", row_idx, col_idx))
         };
 
-        let ret : Option<String> = match output.as_str_or_null()? {
+        let ret : Option<String> = match {
+            let d = output.as_str_or_null();
+            if d.is_err() {
+                return utils_new_error!(proc, CriticalError, format!("col data is not string, check code [{}:{}],", row_idx, col_idx))
+            }
+            d.unwrap()
+        } {
             Some(s) => Some(String::from(s)),
             None => None
         };

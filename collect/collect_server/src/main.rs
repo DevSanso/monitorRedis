@@ -1,6 +1,5 @@
 mod config;
 mod worker;
-mod errors;
 mod threads;
 mod typed;
 
@@ -8,8 +7,6 @@ use std::env;
 use std::fs;
 use std::error::Error;
 use std::thread;
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::time::Duration;
 
 use serde_json;
@@ -24,6 +21,7 @@ use logger::{init_logger, LoggerConfig};
 use dbs::pg_pool::PgPool;
 use dbs::utils::create_pg_url;
 use worker::collect::make_one_collect_worker;
+use core::utils_new_error;
 
 fn get_pool(cfg : &Config) -> (PgPool, SqlitePool) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
@@ -66,7 +64,7 @@ fn get_redis_access_datas(sqlite_p : &mut SqlitePool) ->Result<Vec<(i32,config::
 fn get_process_arg() -> Result<String, Box<dyn Error>> {
     let args : Vec<String> = env::args().collect();
     if args.len() < 2 {
-        return Err(Box::new(errors::MoreArgsError));
+        return utils_new_error!(conf, ProcessConfigPathError, args.len());
     }
     Ok(args[0].clone())
 }
