@@ -63,10 +63,19 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
     let mut executor = build.build();
 
     loop {
-        executor.load_redis_connect_info();
-        executor.update_run_worker();
-        executor.run_worker();
         thread::sleep(Duration::from_millis(100));
+        let load_ret = executor.load_redis_connect_info(); 
+        if load_ret.is_err() {
+            log::error!("Main[Err] : {}", load_ret.err().unwrap());
+            continue;
+        }
+        executor.update_run_worker();
+
+        let run_ret = executor.run_worker();
+        if run_ret.is_err() {
+            log::error!("Main[Err] : {}", run_ret.err().unwrap());
+            continue;
+        }
     }
 
     Ok(())
@@ -78,29 +87,32 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
     init_logger(log_cfgs)?;
     let mut pools = get_pool(&cfg);
 
-    let redis_list = get_redis_access_datas(&mut pools.1)?;
+    let pools = get_pool(&cfg);
 
-    let mut build = RedisExectorBulider::new()
-        .set_name("executorCtl")
+    let build = RedisExectorBulider::new()
+        .register_pg(pools.0)
+        .register_sqlite(pools.1)
         .set_alloc_size(30)
-        .register_pg(pools.0);
+        .set_name("RedisExector_Test")
+        .set_redis_select_fn(&db_info::get_redis_access_datas)
+        .register_workers(make_one_collect_worker());
 
-    for r in redis_list {
-        let cfg = r.1;
-        build = build.register_redis(r.0, RedisPool::new(cfg.ip.clone(), 
-            create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name)));
-    }
-
-    for r in make_one_collect_worker() {
-        let f_cfg = r.1;
-        build = build.register_worker(r.0, f_cfg.0, f_cfg.1);
-    }
-
-    let mut execute = build.build()?;
+    let mut executor = build.build();
 
     loop {
-        execute.run_workers();
         thread::sleep(Duration::from_millis(100));
+        let load_ret = executor.load_redis_connect_info(); 
+        if load_ret.is_err() {
+            log::error!("Main[Err] : {}", load_ret.err().unwrap());
+            continue;
+        }
+        executor.update_run_worker();
+        
+        let run_ret = executor.run_worker();
+        if run_ret.is_err() {
+            log::error!("Main[Err] : {}", run_ret.err().unwrap());
+            continue;
+        }
     }
 
     Ok(())

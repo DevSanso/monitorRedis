@@ -131,6 +131,7 @@ impl RedisThreadExecutor {
                 real_worker_fn : real_fn.1
             };
 
+            acc.push((Some(args), &Self::wrapper_fn));
             acc
         });
 
@@ -192,13 +193,15 @@ impl RedisThreadExecutor {
             let conn = &self.redis_pools[&hash_code];
             
             {
-                let mut is_run_g = conn.1[worker].lock().unwrap();
+                let is_run_g = conn.1[worker].lock().unwrap();
                 if !*is_run_g {
                     acc.push((hash_code, worker));
                 }
             }
             acc
         });
+        
+        self.run_conn_worker(idle_list);
         
         Ok(())
     }

@@ -58,7 +58,7 @@ impl RedisExectorBulider {
         self
     }
 
-    pub fn build(mut self) -> RedisThreadExecutor {
+    pub fn build(self) -> RedisThreadExecutor {
         RedisThreadExecutor {
             collect_pool : self.pg_pool.unwrap(),
             info_pool : self.sqlite_pool.unwrap(),
