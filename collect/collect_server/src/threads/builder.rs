@@ -1,32 +1,33 @@
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 
-use crate::threads::executor::ThreadExecutor;
+use crate::threads::executor::RedisThreadExecutor;
 
-use dbs::{pg_pool::PgPool, redis_pool::RedisPool};
+use dbs::sqlite_pool::SqlitePool;
+use dbs::pg_pool::PgPool;
 use crate::typed::*;
 use thread_pool::TPool;
-use core::utils_new_error;
 
-pub struct ExectorBulider {
-    redis_ps : Vec<(i32, Arc<Mutex<RedisPool>>)>,
+pub struct RedisExectorBulider {
     pg_pool : Option<Arc<Mutex<PgPool>>>,
-
-    workers : HashMap<String,(Duration, WorkerFn)>,
-
+    sqlite_pool : Option<Arc<Mutex<SqlitePool>>>,
+    workers : HashMap<&'static str,(Duration, WorkerFn)>,
     name : &'static str,
-    alloc_size : usize
+    alloc_size : usize,
+    redis_single_conn_fn : Option<SelectRedisConnFn>
 }
 
-impl ExectorBulider {
+
+impl RedisExectorBulider {
     pub fn new() -> Self {
-        ExectorBulider {
-            redis_ps : Vec::new(),
+        RedisExectorBulider {
             pg_pool : None,
+            sqlite_pool : None,
             workers : HashMap::new(),
             name : "",
-            alloc_size : 0
+            alloc_size : 0,
+            redis_single_conn_fn : None
         }
     }
     pub fn set_name(mut self, name : &'static str) -> Self {
@@ -39,57 +40,34 @@ impl ExectorBulider {
         self
     }
 
+    pub fn set_redis_select_fn(mut self, select_fn : SelectRedisConnFn) -> Self {
+        self.redis_single_conn_fn = Some(select_fn);
+        self
+    }
+
     pub fn register_pg(mut self, pg_pool : PgPool) -> Self {
         self.pg_pool = Some(Arc::new(Mutex::new(pg_pool)));
         self
     }
-
-    pub fn register_redis(mut self, idx : i32, redis_pool : RedisPool) -> Self {
-        self.redis_ps.push((idx, Arc::new(Mutex::new(redis_pool))));
+    pub fn register_sqlite(mut self, sqlite_pool : SqlitePool) -> Self {
+        self.sqlite_pool = Some(Arc::new(Mutex::new(sqlite_pool)));
+        self
+    }
+    pub fn register_workers(mut self, w : HashMap<&'static str, (Duration, WorkerFn)>) -> Self {
+        self.workers = w;
         self
     }
 
-    pub fn register_worker(mut self, name : String, interval : Duration, f : WorkerFn) -> Self {
-        self.workers.insert(name, (interval, f));
-        self
-    }
-
-    fn make_flags(redis_keys : Vec<i32>, worker_names : Vec<String>) ->HashMap<(i32, String), Arc<Mutex<bool>>> {
-        let mut h = HashMap::new();
-        
-        for idx in redis_keys.iter() {
-            for name in worker_names.iter() {
-                h.insert((idx.clone(), name.clone()), Arc::new(Mutex::new(false)));
-            }
+    pub fn build(mut self) -> RedisThreadExecutor {
+        RedisThreadExecutor {
+            collect_pool : self.pg_pool.unwrap(),
+            info_pool : self.sqlite_pool.unwrap(),
+            redis_conn_flag : Vec::new(),
+            single_conn_fn : self.redis_single_conn_fn.unwrap(),
+            worker_fn_list : self.workers,
+            redis_pools : HashMap::new(),
+            thread_pool : TPool::new(self.name, self.alloc_size),
+            run_workers_list : None
         }
-
-        h
-    }
-
-    pub fn build(mut self) -> Result<ThreadExecutor, Box<dyn Error>> {
-        let redis_keys = self.redis_ps.iter().fold(Vec::new(), |mut acc : Vec<i32>, x| {
-            acc.push(x.0);
-            acc
-        });
-
-        let worker_kets = self.workers.iter().fold(Vec::new(), |mut acc : Vec<String>, x| {
-            acc.push(x.0.clone());
-            acc
-        }); 
-
-        if self.pg_pool.is_none() {
-            return utils_new_error!(proc, NoneDataError, "pg_pool");
-        }
-
-        let ret = ThreadExecutor {
-            t_pool : TPool::new(self.name, self.alloc_size),
-            redis_ps : self.redis_ps,
-            pg_pool : self.pg_pool.unwrap(),
-            workers : self.workers,
-            running_flags : Self::make_flags(redis_keys, worker_kets)
-        };
-
-        Ok(ret)
-
     }
 }

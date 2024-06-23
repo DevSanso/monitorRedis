@@ -17,7 +17,8 @@ impl_err_mod!(connection, [
 
 impl_err_mod!(fetch, [
     (RowIdxNotExistError, "not exists rows dataset, this idx key", "maybe not exists this idxs key in rows dataset"),
-    (NilDataError, "database return data is none data", "database return data is none, this error not critial error")
+    (NilDataError, "database return data is none data", "database return data is none, this error not critial error"),
+    (GetFailedError, "get database query failed", "check query or fetch rust function code")
 ]);
 
 impl_err_mod!(conf, [
@@ -30,6 +31,8 @@ impl_err_mod!(proc, [
     (MaxSizedError, "memeory or pool is used Max size", "can't alloc new memory"),
     (PoolNotSetError, "pool state is not init", "check code, create pool function"),
     (PoolGetItemError, "failed pool item", "mayby pool ls used max or gen function failed, check env"),
-    (NoneDataError, "none data", "used var is not exists data, check code")
+    (NoneDataError, "none data", "used var is not exists data, check code"),
+    (RootError, "errors list", "it error use utils_inherit_error"),
+    (UnkownError, "", "")
 ]);
 
