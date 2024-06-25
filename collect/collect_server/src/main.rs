@@ -10,6 +10,7 @@ use std::fs;
 use std::error::Error;
 use std::thread;
 use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 use serde_json;
 
@@ -25,15 +26,15 @@ use dbs::utils::create_pg_url;
 use worker::collect::make_one_collect_worker;
 use core::utils_new_error;
 
-fn get_pool(cfg : &Config) -> (PgPool, SqlitePool) {
+fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, Arc<Mutex<SqlitePool>>) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
     cfg.pg_config.password.as_str(), 
     cfg.pg_config.ip.as_str(), 
     cfg.pg_config.port, 
     cfg.pg_config.db_name.as_str());
 
-    let pg_p = PgPool::new(pg_url);
-    let sqlite_p = SqlitePool::new(cfg.sqlite_path.clone());
+    let pg_p = Arc::new(Mutex::new(PgPool::new(pg_url)));
+    let sqlite_p = Arc::new(Mutex::new(SqlitePool::new(cfg.sqlite_path.clone())));
 
     (pg_p, sqlite_p)
 }
@@ -53,8 +54,8 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
     let pools = get_pool(&cfg);
 
     let build = RedisExectorBulider::new()
-        .register_pg(pools.0)
-        .register_sqlite(pools.1)
+        .register_pg(&pools.0)
+        .register_sqlite(&pools.1)
         .set_alloc_size(30)
         .set_name("RedisExector")
         .set_redis_select_fn(&db_info::get_redis_access_datas)
@@ -90,8 +91,8 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
     let pools = get_pool(&cfg);
 
     let build = RedisExectorBulider::new()
-        .register_pg(pools.0)
-        .register_sqlite(pools.1)
+        .register_pg(&pools.0)
+        .register_sqlite(&pools.1)
         .set_alloc_size(30)
         .set_name("RedisExector_Test")
         .set_redis_select_fn(&db_info::get_redis_access_datas)

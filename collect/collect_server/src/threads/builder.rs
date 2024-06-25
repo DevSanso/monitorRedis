@@ -45,12 +45,12 @@ impl RedisExectorBulider {
         self
     }
 
-    pub fn register_pg(mut self, pg_pool : PgPool) -> Self {
-        self.pg_pool = Some(Arc::new(Mutex::new(pg_pool)));
+    pub fn register_pg(mut self, pg_pool : &'_ Arc<Mutex<PgPool>>) -> Self {
+        self.pg_pool = Some(Arc::clone(pg_pool));
         self
     }
-    pub fn register_sqlite(mut self, sqlite_pool : SqlitePool) -> Self {
-        self.sqlite_pool = Some(Arc::new(Mutex::new(sqlite_pool)));
+    pub fn register_sqlite(mut self, sqlite_pool : &'_ Arc<Mutex<SqlitePool>>) -> Self {
+        self.sqlite_pool = Some(Arc::clone(sqlite_pool));
         self
     }
     pub fn register_workers(mut self, w : HashMap<&'static str, (Duration, WorkerFn)>) -> Self {
@@ -59,15 +59,26 @@ impl RedisExectorBulider {
     }
 
     pub fn build(self) -> RedisThreadExecutor {
+        let worker_keys : Vec<&'static str> = {
+            let keys = self.workers.keys();
+            let key_len = keys.len();
+
+            keys.fold(Vec::with_capacity(key_len), |mut acc, x| {
+                acc.push(*x);
+                acc
+            })
+        };
+
         RedisThreadExecutor {
             collect_pool : self.pg_pool.unwrap(),
             info_pool : self.sqlite_pool.unwrap(),
-            redis_conn_flag : Vec::new(),
             single_conn_fn : self.redis_single_conn_fn.unwrap(),
             worker_fn_list : self.workers,
             redis_pools : HashMap::new(),
             thread_pool : TPool::new(self.name, self.alloc_size),
-            run_workers_list : None
+            redis_worker_flags : HashMap::new(),
+            run_workers_list : None,
+            woker_fn_keys : worker_keys
         }
     }
 }
