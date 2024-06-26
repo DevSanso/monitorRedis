@@ -1,7 +1,7 @@
 [
     {"ClientList" : "client list"},
     {"InfoServer" : "info server"},
-    {"InfoCpu" :    "info cpu"   },
+    {"InfoCpu" : "eval \\\"local cpu = redis.call('info', 'cpu');local n = redis.call('info', 'server'); local ret = {};ret[1] = string.match(n, 'uptime_in_seconds:(%d+)');ret[2]=cpu;return ret\\\" 0"},
     {"InfoStat":    "info stats" },
     {"InfoMemory" :"info memeory"},
     {"DbSize" : "eval \\\"redis.call('select',ARGV[1]); return redis.call('dbsize')\\\" 0 ?"},

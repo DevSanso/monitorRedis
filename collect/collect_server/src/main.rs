@@ -13,10 +13,9 @@ use std::time::Duration;
 use std::sync::{Arc, Mutex};
 
 use serde_json;
+use chrono::Timelike;
 
-use dbs::redis_pool::RedisPool;
 use dbs::sqlite_pool::SqlitePool;
-use dbs::utils::create_redis_url;
 use crate::threads::builder::RedisExectorBulider;
 
 use config::Config;
@@ -64,7 +63,6 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
     let mut executor = build.build();
 
     loop {
-        thread::sleep(Duration::from_millis(100));
         let load_ret = executor.load_redis_connect_info(); 
         if load_ret.is_err() {
             log::error!("Main[Err] : {}", load_ret.err().unwrap());
@@ -77,6 +75,9 @@ pub fn server_main(cfg : Config) -> Result<(), Box<dyn Error>> {
             log::error!("Main[Err] : {}", run_ret.err().unwrap());
             continue;
         }
+        let millis = chrono::Local::now().timestamp_millis() % 1000;
+        let delay = 1000 - millis + 5;
+        thread::sleep(Duration::from_millis(delay as u64));
     }
 
     Ok(())
@@ -101,7 +102,6 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
     let mut executor = build.build();
 
     loop {
-        thread::sleep(Duration::from_millis(100));
         let load_ret = executor.load_redis_connect_info(); 
         if load_ret.is_err() {
             log::error!("Main[Err] : {}", load_ret.err().unwrap());
@@ -114,6 +114,10 @@ pub fn server_main_test(cfg : Config) -> Result<(), Box<dyn Error>> {
             log::error!("Main[Err] : {}", run_ret.err().unwrap());
             continue;
         }
+
+        let millis = chrono::Local::now().timestamp_millis() % 1000;
+        let delay = 1000 - millis + 5;
+        thread::sleep(Duration::from_millis(delay as u64));
     }
 
     Ok(())

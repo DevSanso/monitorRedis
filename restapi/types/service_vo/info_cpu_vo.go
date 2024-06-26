@@ -41,19 +41,19 @@ func NewInfoCpuUsageVO(list []repo_vo.InfoCpuVO) []InfoCpuUsageVO {
 		totalSec := cpuRight.UptimeSecond - cpuLeft.UptimeSecond
 
 		cpuSysTime := cpuRight.CpuSys - cpuLeft.CpuSys
-		cpuSysUsage := cpuSysTime / float64(totalSec)
+		cpuSysUsage := (cpuSysTime / float64(totalSec)) * 100 
 		if cpuSysUsage > 100.0 {cpuSysUsage = 100}
 
 		cpuUserTime := cpuRight.CpuUser - cpuLeft.CpuUser
-		cpuUserUsage := cpuUserTime / float64(totalSec)
+		cpuUserUsage := (cpuUserTime / float64(totalSec)) * 100
 		if cpuUserUsage > 100.0 {cpuUserUsage = 100}
 
 		cpuChildSysTime := cpuRight.ChildCpuSys - cpuLeft.ChildCpuSys		
-		cpuChildSysUsage := cpuChildSysTime / float64(totalSec)
+		cpuChildSysUsage := (cpuChildSysTime / float64(totalSec)) * 100
 		if cpuChildSysUsage > 100.0 {cpuChildSysUsage = 100}
 
 		cpuChildUserTime := cpuRight.ChildCpuUser - cpuLeft.ChildCpuUser
-		cpuChildUserUsage := cpuChildUserTime / float64(totalSec)
+		cpuChildUserUsage := (cpuChildUserTime / float64(totalSec)) * 100
 		if cpuChildUserUsage > 100.0 {cpuChildUserUsage = 100}
 
 

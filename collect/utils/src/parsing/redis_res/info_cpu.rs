@@ -17,7 +17,8 @@ pub struct InfoCpu {
     pub cpu_sys : f64,
     pub cpu_user : f64,
     pub child_cpu_sys : f64,
-    pub child_cpu_user : f64
+    pub child_cpu_user : f64,
+    pub total_sec : i64
 }
 
 #[inline]
@@ -39,7 +40,16 @@ pub fn parsing_info_cpu(res : String) -> Result<InfoCpu, Box<dyn Error>> {
     let s = res.as_str();
     let mut o = InfoCpu::default();
 
-    for line in s.split("\n").skip(1) {
+    let mut token = s.split("\n");
+
+    let total = token.next().unwrap();
+
+    o.total_sec = match total.parse() {
+        Ok(ok) => ok,
+        Err(err) => return utils_inherit_error!(data, CantMappingKeyError, "info cpu", err)
+    };
+
+    for line in token.skip(1) {
         if line == "" {continue;}
         let ret = mapping_info_cpu(&mut o, line);
 
