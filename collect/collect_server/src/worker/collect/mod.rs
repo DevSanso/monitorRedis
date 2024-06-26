@@ -20,12 +20,12 @@ macro_rules! register_worker_list {
 pub fn make_one_collect_worker() -> HashMap<&'static str, (Duration, WorkerFn)> {
     let mut m : HashMap<&'static str,(Duration, WorkerFn)> = HashMap::new();
 
-   // register_worker_list!(m, "ClientList", 111110, client_list_worker::client_list_worker);
-    register_worker_list!(m, "InfoCpu", 5, info_cpu_worker::info_cpu_worker);
-    //register_worker_list!(m, "InfoStat", 601111, info_stats_worker::info_stats_worker);
-    //register_worker_list!(m, "DBSize", 601111, db_size_worker::db_size_worker);
-    //register_worker_list!(m, "InfoCommandStats", 601111, info_commandstats_worker::info_commandstats_worker);
-    //register_worker_list!(m, "ConfigAll", 36001111, config_get_all_worker::client_list_worker);
+    register_worker_list!(m, "ClientList", 10, client_list_worker::client_list_worker);
+    register_worker_list!(m, "InfoCpu", 30, info_cpu_worker::info_cpu_worker);
+    register_worker_list!(m, "InfoStat", 60, info_stats_worker::info_stats_worker);
+    register_worker_list!(m, "DBSize", 60, db_size_worker::db_size_worker);
+    register_worker_list!(m, "InfoCommandStats", 60, info_commandstats_worker::info_commandstats_worker);
+    register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::client_list_worker);
     
     m
 }
