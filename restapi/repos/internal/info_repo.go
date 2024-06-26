@@ -12,7 +12,7 @@ func InfoRepoGenInfoCpuList(rows *sql.Rows) ([]repo_vo.InfoCpuVO, error) {
 	for rows.Next() {
 		temp := repo_vo.InfoCpuVO{};
 
-		err := rows.Scan(&temp.CollectTime, &temp.CpuSys, &temp.CpuUser, &temp.ChildCpuSys, &temp.ChildCpuUser)
+		err := rows.Scan(&temp.CollectTime, &temp.CpuSys, &temp.CpuUser, &temp.ChildCpuSys, &temp.ChildCpuUser, &temp.UptimeSecond)
 		if err != nil {
 			return nil, err
 		}

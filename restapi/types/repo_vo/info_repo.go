@@ -6,6 +6,7 @@ type InfoCpuVO struct {
 	CpuUser float64
 	ChildCpuSys float64
 	ChildCpuUser float64
+    UptimeSecond int64
 }
 
 type InfoStatVO struct {

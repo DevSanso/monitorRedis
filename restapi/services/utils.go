@@ -60,6 +60,13 @@ func writeIfCommonErrorFromAppResponse(err error, host string, url string) *core
 func writeCommonResultFromAppResponse(body any) *core.ApplicationResponse {
 	ret := new(core.ApplicationResponse)
 
+	if body == nil {
+		ret.Code = 204
+		ret.Response = nil
+		ret.Err = nil
+		return ret
+	}
+
 	body_bytes, jsonErr := objectToJsonString(body)
 	ret.Response = body_bytes
 	

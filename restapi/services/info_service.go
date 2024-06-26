@@ -8,6 +8,7 @@ import (
 	"restapi/repos"
 	"restapi/types/core"
 	"restapi/types/errs"
+	"restapi/types/service_vo"
 )
 
 type InfoService struct{}
@@ -42,7 +43,7 @@ func (c *InfoService) CpuList(r *http.Request) *core.ApplicationResponse {
 	errRes := writeIfCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
 	if errRes != nil { return errRes }
 
-	return writeCommonResultFromAppResponse(list)
+	return writeCommonResultFromAppResponse(service_vo.NewInfoCpuUsageVO(list))
 }
 
 func (c *InfoService) Stats(r *http.Request) *core.ApplicationResponse {
