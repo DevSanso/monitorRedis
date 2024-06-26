@@ -13,12 +13,12 @@ mod config_get_all_worker;
 
 macro_rules! register_worker_list {
     ($m : expr, $name: expr, $interval : expr, $func : expr) => {
-        $m.insert(String::from($name), (Duration::from_secs($interval), &$func));
+        $m.insert($name, (Duration::from_secs($interval), &$func));
     };
 }
 
-pub fn make_one_collect_worker() -> HashMap<String,(Duration, WorkerFn)> {
-    let mut m : HashMap<String,(Duration, WorkerFn)> = HashMap::new();
+pub fn make_one_collect_worker() -> HashMap<&'static str, (Duration, WorkerFn)> {
+    let mut m : HashMap<&'static str,(Duration, WorkerFn)> = HashMap::new();
 
     register_worker_list!(m, "ClientList", 10, client_list_worker::client_list_worker);
     register_worker_list!(m, "InfoCpu", 30, info_cpu_worker::info_cpu_worker);
@@ -28,8 +28,4 @@ pub fn make_one_collect_worker() -> HashMap<String,(Duration, WorkerFn)> {
     register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::client_list_worker);
     
     m
-}
-
-pub fn make_all_sync_worker() {
-    
 }

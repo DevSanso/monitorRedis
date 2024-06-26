@@ -34,6 +34,22 @@ impl RedisPool {
     pub fn get(&mut self) -> Result<PoolItem<RedisRequester>, Box<dyn Error>> {
         self.pool.get(self.url.clone())
     }
+
+    pub fn ping(&mut self) -> Result<(), Box<dyn Error>> {
+        let c = self.get();
+        if c.is_err() {
+            return utils_inherit_error!(connection, GetConnectionFailedError, "ping connection get failed", c.err().unwrap());
+        }
+        let mut val = c.unwrap();
+        let conn = val.get_value();
+
+        let ret = conn.ping();
+        if ret.is_err() {
+            return Err(ret.err().unwrap())
+        }
+
+        Ok(())
+    }
 }
 
 pub struct RedisRequester {
@@ -136,7 +152,25 @@ impl RedisRequester {
 
         Ok(ret)
     }
+    pub fn ping(&mut self) -> Result<(), Box<dyn Error>> {
+        let mut cmd = Cmd::new();
+        cmd.arg("PING");
 
+        let mut conn = {
+            let c = self.client.get_connection();
+            if c.is_err() {
+                return utils_inherit_error!(connection, GetConnectionFailedError, "", c.err().unwrap());
+            }
+            c.unwrap()
+        };
+
+        let ret = cmd.query::<()>(&mut conn);
+        if ret.is_err() {
+            return utils_inherit_error!(connection, CommandRunError, "", ret.err().unwrap());
+        }
+
+        Ok(())
+    }
     pub fn run_command(&mut self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String, Box<dyn Error>> {
         let mut cmd = Cmd::new();
         let split_cmd = self.parsing_args(command, args)?;
