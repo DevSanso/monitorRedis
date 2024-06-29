@@ -59,8 +59,8 @@
         " link_key, ",
         " collect_time, ",
         " cmd, ",
-        " calls ",
-        " usec ",
+        " calls, ",
+        " usec, ",
         " usec_per_call ",
         ") VALUES ( $1, now(), $2, $3, $4, $5) "]
     },

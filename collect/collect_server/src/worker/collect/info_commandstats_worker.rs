@@ -1,3 +1,4 @@
+use core::utils_inherit_error;
 use std::error::Error;
 
 use dbs;
@@ -29,7 +30,7 @@ pub fn info_commandstats_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_
 
         if exec_ret.is_err() {
             let _ = t.rollback();
-            return Err(exec_ret.unwrap_err());
+            return utils_inherit_error!(connection, CommandRunError, "commandstats", exec_ret.unwrap_err());
         }
     }
 

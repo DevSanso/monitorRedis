@@ -13,14 +13,19 @@ pub struct CommandStat {
     pub usec_per_call : f64 
 }
 pub fn parsing_commandstat_datas(cmd : String, datas : Split<&'_ str>) -> Result<CommandStat, Box<dyn Error>> {
+    const UNSUPPORT_KEYS : &'static [&'static str]= &["rejected_calls", "failed_calls"];
     let mut c = CommandStat::default();
     c.cmd = cmd.replace("cmdstat_", "");
 
     for data in datas {
-        match data {
-            "calls" => c.calls = data.parse()?,
-            "usec" => c.usec = data.parse()?,
-            "usec_per_call" => c.usec_per_call = data.parse()?,
+        let (key, val) = split_eq_tuple(data)?;
+        match key.as_str() {
+            "calls" => c.calls = val.parse()?,
+            "usec" => c.usec = val.parse()?,
+            "usec_per_call" => c.usec_per_call = val.parse()?,
+            k if UNSUPPORT_KEYS.contains(&k) => {
+                log::debug!("not support {} this commandstat data", k);
+            },            
             _ =>  return utils_new_error!(data, CantMappingKeyError, data)
         }
     }
@@ -29,9 +34,8 @@ pub fn parsing_commandstat_datas(cmd : String, datas : Split<&'_ str>) -> Result
 }
 pub fn parsing_info_commandstats(res : String) -> Result<Vec<CommandStat>, Box<dyn Error>> {
     let str_p = res.as_str();
-    let split = str_p.split("\n").fold(Vec::<&'_ str>::new(), |mut acc, x | {
-        acc.push(x.trim());
-
+    let split = str_p.trim().split("\n").skip(1).fold(Vec::<&'_ str>::new(), |mut acc, x | {
+        acc.push(x);
         acc
     });
 
