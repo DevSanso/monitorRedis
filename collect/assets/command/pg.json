@@ -2,8 +2,8 @@
     {
         "ClientList":[
             " INSERT INTO redis_client_list ",
-            " (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd) ",
-            " VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) "]
+            " (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd, \\\"user\\\") ",
+            " VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) "]
     },
     {
         "InfoCpu" : [" INSERT INTO redis_info_cpu ( ",

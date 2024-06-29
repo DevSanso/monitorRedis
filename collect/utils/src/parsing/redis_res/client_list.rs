@@ -24,13 +24,16 @@ pub struct ClientListItem {
     pub oll : i64,
     pub omem : i64,
     pub events : char,
-    pub cmd : String
+    pub cmd : String,
+    pub user : String
 }
 
 pub type ClientList = Vec<ClientListItem>;
 
 #[inline]
 fn mapping_client_list_item(key : &'_ str, value : &'_ str, refer : &mut ClientListItem) -> Result<(), Box<dyn Error>> {
+    const UNSUPPORT_KEYS : &'static [&'static str]= &["laddr", "ssub", "argv-mem", "multi-mem", "rbs", "rbp", "tot-mem", "redir", "resp", "lib-name", "lib-ver"];
+
     match key {
         "id" => refer.id = value.parse()?,
         "addr" => refer.addr = String::from(value),
@@ -50,6 +53,10 @@ fn mapping_client_list_item(key : &'_ str, value : &'_ str, refer : &mut ClientL
         "omem" => refer.omem = value.parse()?,
         "events" => refer.events = value.chars().next().unwrap(),
         "cmd" => refer.cmd = String::from(value),
+        "user" => refer.user = String::from(value),
+        key if UNSUPPORT_KEYS.contains(&key) => {
+            log::debug!("not support {} this client list data", key);
+        }
         
         _ => return utils_new_error!(data, CantMappingKeyError, key)
     }

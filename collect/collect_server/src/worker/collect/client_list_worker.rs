@@ -28,7 +28,7 @@ pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::
             &client.id, &client.addr, &client.fd, &client.name, &client.age,
             &client.idle, &String::from(client.flags), &client.db, &client.sub,
             &client.psub, &(client.multi as i64), &client.qbuf, &client.qbuf_free,
-            &client.obl, &client.oll, &client.omem, &String::from(client.events), &client.cmd]);
+            &client.obl, &client.oll, &client.omem, &String::from(client.events), &client.cmd, &client.user]);
 
         if exec_ret.is_err() {
             let _ = t.rollback();
