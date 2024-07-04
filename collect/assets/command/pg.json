@@ -90,5 +90,16 @@
         " collect_time = now(), ",
         " status = $2"
         ]
+    },
+    {
+        "KeySpace" : [" INSERT INTO redis_key_space( ",
+        " link_key, ",
+        " collect_time, ",
+        " db_name, ",
+        " expires, ",
+        " avg_ttl ",
+        " ) ",
+        " VALUES( $1, now(), $2, $3, $4, $5 ) "
+        ]
     }
 ]

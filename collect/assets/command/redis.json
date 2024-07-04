@@ -9,7 +9,6 @@
     {"InfoCommandStats" : "info commandstats"},
     {"InfoKeySpace" : "info keyspace"},
     {"InfoReplication" : "info replication"},
-    {"Ping" : "ping"},
     {"GetDatabaseCount":"config get databases"},
     {"GetLimitClientCount":"config get maxclients"},
     {"GetRedisLimitMemorySize" : "config get maxmemory"},

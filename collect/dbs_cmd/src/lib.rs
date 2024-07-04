@@ -13,7 +13,6 @@ pub enum RedisCommand {
     InfoCommandStats,
     InfoKeySpace,
     InfoReplication,
-    Ping,
     GetDatabaseCount,
     GetLimitClientCount,
     GetRedisLimitMemorySize,
@@ -38,7 +37,6 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
         reids_commandline_map_internal.insert(RedisCommand::InfoCommandStats, "info commandstats");
         reids_commandline_map_internal.insert(RedisCommand::InfoKeySpace, "info keyspace");
         reids_commandline_map_internal.insert(RedisCommand::InfoReplication, "info replication");
-        reids_commandline_map_internal.insert(RedisCommand::Ping, "ping");
         reids_commandline_map_internal
             .insert(RedisCommand::GetDatabaseCount, "config get databases");
         reids_commandline_map_internal

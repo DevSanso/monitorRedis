@@ -6,7 +6,7 @@ use dbs::pg_pool::PgUploader;
 
 use utils::parsing::redis_res::parsing_config_get_all;
 
-pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
+pub fn config_get_all_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
     let redis_cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::GetAllConfig).unwrap();
 
     let ret = redis_conn.run_command(&redis_cmd, &[])?;
