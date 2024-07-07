@@ -64,6 +64,10 @@ pub enum PgCommand {
     InfoCommandStats,
     ConfigAll,
     PingUpdate,
+    KeySpace,
+    SyncClusterNodes,
+    InsertClusterNodesPing,
+    DeleteClusterNodes,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
@@ -73,8 +77,12 @@ pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>
         pg_commandline_map_internal.insert(PgCommand::InfoStat," INSERT INTO redis_info_stats (   link_key,   collect_time,   total_connections_received,   total_commands_processed,   instantaneous_ops_per_sec,   total_net_input_bytes,   total_net_output_bytes,   instantaneous_input_kbps,   instantaneous_output_kbps,   rejected_connections,   sync_full,   sync_partial_ok,   sync_partial_err,   expired_keys,   evicted_keys,   keyspace_hits,   keyspace_misses,   pubsub_channels,   pubsub_patterns,   latest_fork_usec,   migrate_cached_sockets,   slave_expires_tracked_keys,   active_defrag_hits,   active_defrag_misses,   active_defrag_key_hits,   active_defrag_key_misses   ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) ");
         pg_commandline_map_internal.insert(PgCommand::DbSize," INSERT INTO redis_dbsize (   link_key,   collect_time,   dbname,   db_size  ) VALUES ( $1, now(), $2, $3) ");
         pg_commandline_map_internal.insert(PgCommand::InfoCommandStats," INSERT INTO redis_info_commandstats(   link_key,   collect_time,   cmd,   calls,   usec,   usec_per_call  ) VALUES ( $1, now(), $2, $3, $4, $5) ");
-        pg_commandline_map_internal.insert(PgCommand::ConfigAll," INSERT INTO redis_config_all(   link_key,   sync_time,   name,   value )  VALUES (   $1, now(), $2, $3 )  ON CONFLICT(link_key, name, collect_time)   DO UPDATE   collect_time = now(),   value = $3 ");
-        pg_commandline_map_internal.insert(PgCommand::PingUpdate," INSERT INTO redis_ping_status(   link_key,   sync_time,   status )  VALUES (   $1, now(), $2)  ON CONFLICT(link_key)   DO UPDATE   collect_time = now(),   status = $2");
+        pg_commandline_map_internal.insert(PgCommand::ConfigAll," INSERT INTO redis_config_all(   link_key,   sync_time,   name,   value )  VALUES (   $1, now(), $2, $3 )  ON CONFLICT(link_key, name, sync_time)   DO UPDATE   sync_time = now(),   value = $3 ");
+        pg_commandline_map_internal.insert(PgCommand::PingUpdate," INSERT INTO redis_ping_status(   link_key,   sync_time,   status )  VALUES (   $1, now(), $2)  ON CONFLICT(link_key)   DO UPDATE   sync_time = now(),   status = $2");
+        pg_commandline_map_internal.insert(PgCommand::KeySpace," INSERT INTO redis_key_space(   link_key,   collect_time,   db_name,   expires,   avg_ttl   )   VALUES( $1, now(), $2, $3, $4, $5 ) ");
+        pg_commandline_map_internal.insert(PgCommand::SyncClusterNodes," INSERT INTO redis_cluster_nodes (   link_key,   sync_time,   node_id,   ip,   port,   cluster_port,   type,   master_node,   ping_epoch,   connected_state,   slots )   VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10)   ON CONFLICT(link_key, node_id, ip) DO UPDATE   port = $4,   cluster_port = $5   type = $6,   master_node = $7,   ping_epoch = $8,   connected_state = $9,   slots = $10 ");
+        pg_commandline_map_internal.insert(PgCommand::InsertClusterNodesPing," INSERT INTO redis_cluster_nodes_ping (   link_key,   sync_time,   node_id,   ping_send,   ping_recv )   VALUES($1, now(), $2, $3, $4, $5 ) ");
+        pg_commandline_map_internal.insert(PgCommand::DeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 ");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]
