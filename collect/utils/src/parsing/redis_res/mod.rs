@@ -13,3 +13,4 @@ pub use db_size::parsing_confg_get_databases;
 pub use db_size::parsing_dbsize;
 pub use info_commandstats::parsing_info_commandstats;
 pub use config_get_all::parsing_config_get_all;
+pub use cluster_nodes::parsing_cluster_nodes;

@@ -11,6 +11,7 @@ mod db_size_worker;
 mod info_commandstats_worker;
 mod config_get_all_worker;
 mod ping_status_worker;
+mod cluster_nodes_worker;
 
 macro_rules! register_worker_list {
     ($m : expr, $name: expr, $interval : expr, $func : expr) => {
@@ -28,6 +29,7 @@ pub fn make_one_collect_worker() -> HashMap<&'static str, (Duration, WorkerFn)> 
     register_worker_list!(m, "InfoCommandStats", 3600, info_commandstats_worker::info_commandstats_worker);
     register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::config_get_all_worker);
     register_worker_list!(m, "PingStatus", 20, ping_status_worker::ping_status_worker);
+    register_worker_list!(m, "ClusterNodes", 60, cluster_nodes_worker::cluster_nodes_worker);
     
     m
 }

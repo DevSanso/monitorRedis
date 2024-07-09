@@ -7,16 +7,17 @@ use core::utils_inherit_error;
 
 #[derive(Default)]
 pub struct ClusterNode {
-    node_id : String,
-    ip : String,
-    port : i64,
-    cport : i64,
-    node_type : String,
-    ping_send : i64,
-    ping_recv : i64,
-    ping_epoch : i64,
-    connect_type : String,
-    slots : Vec<i32>
+    pub node_id : String,
+    pub ip : String,
+    pub port : i64,
+    pub cport : i64,
+    pub node_type : String,
+    pub master_node : Option<String>,
+    pub ping_send : i64,
+    pub ping_recv : i64,
+    pub ping_epoch : i64,
+    pub connect_type : String,
+    pub slots : Vec<i32>
 }
 
 pub type ClusterNodes = Vec<ClusterNode>;
@@ -59,7 +60,13 @@ fn parsing_cluster_node(line : &'_ str) -> Result<ClusterNode, Box<dyn Error>> {
                 };
             },
             2 => ret.node_type = String::from(data),
-            3 => {},
+            3 => {
+                ret.master_node = if data == "-" {
+                    None
+                }else{
+                    Some(String::from(data))
+                };
+            },
             4 => {
                 ret.ping_send = match data.parse::<i64>() {
                     Ok(ok) => ok,
