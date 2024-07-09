@@ -116,9 +116,9 @@
         " connected_state, ",
         " slots ) ",
         " VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10) ",
-        " ON CONFLICT(link_key, node_id, ip) DO UPDATE ",
+        " ON CONFLICT(link_key, node_id, ip) DO UPDATE SET ",
         " port = $4, ",
-        " cluster_port = $5 ",
+        " cluster_port = $5, ",
         " type = $6, ",
         " master_node = $7, ",
         " ping_epoch = $8, ",
@@ -133,7 +133,7 @@
         " node_id, ",
         " ping_send, ",
         " ping_recv ) ",
-        " VALUES($1, now(), $2, $3, $4, $5 ) "
+        " VALUES($1, now(), $2, $3, $4 ) "
         ]
     },
     {

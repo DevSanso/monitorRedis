@@ -26,7 +26,7 @@ fn parsing_cluster_node(line : &'_ str) -> Result<ClusterNode, Box<dyn Error>> {
     let mut ret = ClusterNode::default();
     let mut index = 0;
     
-    for data in line.trim().split_whitespace() {
+    for data in line.split_whitespace() {
         match index {
             0 => ret.node_id = String::from(data),
             1 => {
@@ -104,7 +104,8 @@ fn parsing_cluster_node(line : &'_ str) -> Result<ClusterNode, Box<dyn Error>> {
 pub fn parsing_cluster_nodes(res : String) -> Result<ClusterNodes, Box<dyn Error>> {
     let mut ret = Vec::new();
 
-    for line in res.split("\n") {
+    for line in res.trim().split("\n") {
+        if line.len() == 0 {continue;}
         ret.push(parsing_cluster_node(line)?);
     }
 
