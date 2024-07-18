@@ -15,5 +15,6 @@
     {"GetClusterGenKeySlotSize":"cluster countkeysinslot"},
     {"GetClusterNodes" : "cluster nodes"},
     {"GetMemoryUsageFromKey" : "MEMORY USAGE ?"},
-    {"GetAllConfig" : "config get *"}
+    {"GetAllConfig" : "config get *"},
+    {"GetMemoryKeyUsage500Range" : "eval \\\"local scan_val = redis.call('scan', ARGV[1], 'count', 500);local ks = scan_val[2];local ks_usage = {};local idx = 1;local usage = 0; for k, value in pairs(ks) do local reply = redis.pcall('memory','usage', value) ks_usage[idx] = {value, reply };idx = idx + 1; end;  return {scan_val[1],ks_usage}\\\" ? "}
 ]
