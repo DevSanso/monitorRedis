@@ -5,7 +5,7 @@ use crate::parsing::common::*;
 use core::utils_new_error;
 use core::utils_inherit_error;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct KeyMemUsage {
     pub name : String,
     pub mem_size : i64
