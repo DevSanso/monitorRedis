@@ -21,7 +21,7 @@ pub enum RedisCommand {
     GetClusterNodes,
     GetMemoryUsageFromKey,
     GetAllConfig,
-    GetMemoryKeyUsage500Range,
+    GetMemoryKeyUsage3000Range,
 }
 pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
@@ -56,7 +56,7 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
         reids_commandline_map_internal
             .insert(RedisCommand::GetMemoryUsageFromKey, "MEMORY USAGE ?");
         reids_commandline_map_internal.insert(RedisCommand::GetAllConfig, "config get *");
-        reids_commandline_map_internal.insert(RedisCommand::GetMemoryKeyUsage500Range,"eval \"local scan_val = redis.call('scan', ARGV[1], 'count', 500);local ks = scan_val[2];local ks_usage = {};local idx = 1;local usage = 0; for k, value in pairs(ks) do local reply = redis.pcall('memory','usage', value) ks_usage[idx] = {value, reply };idx = idx + 1; end;  return {scan_val[1],ks_usage}\" 0 ? ");
+        reids_commandline_map_internal.insert(RedisCommand::GetMemoryKeyUsage3000Range,"eval \"local scan_val = redis.call('scan', ARGV[1], 'count', 3000);local ks = scan_val[2];local ks_usage = {};local idx = 1;local usage = 0; for k, value in pairs(ks) do local reply = redis.pcall('memory','usage', value); local expired = redis.call('ttl', value); ks_usage[idx] = {value, reply, expired };idx = idx + 1; end;  return {scan_val[1],ks_usage}\" 0 ? ");
         reids_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]

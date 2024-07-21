@@ -8,7 +8,8 @@ use core::utils_inherit_error;
 #[derive(Default, Clone)]
 pub struct KeyMemUsage {
     pub name : String,
-    pub mem_size : i64
+    pub mem_size : i64,
+    pub remain_expired_time : i64
 }
 
 #[derive(Default)]
@@ -30,23 +31,37 @@ pub fn parsing_key_usage_top_one_hundred(res : String) -> Result<KeyMemUsageList
         Err(err) => return utils_inherit_error!(data, GetDataCastError, "", err)
     };
 
-    let mut temp_name : Option<String> = None;
     let mut ret = KeyMemUsageList::default();
     ret.next_cursor = cursor_cast;
 
+    loop {
+        let line = token.next();
+        if line.is_none() {
+            break;
+        }
 
-    for line in token {
-        if temp_name.is_some() {
-            let key_size = match line.parse::<i64>() {
-                Ok(ok) => ok,
-                Err(err) => return utils_inherit_error!(data, GetDataCastError, "", err)
-            };
-
-            ret.fetch.push(KeyMemUsage { name: temp_name.take().unwrap(), mem_size: key_size });
+        let name = String::from(line.unwrap());
+        if name == "" {
             continue;
         }
 
-        temp_name = Some(String::from(line));
+        let key_size = match token.next() {
+            Some(val) => match val.parse::<i64>() {
+                Ok(ok) => ok,
+                Err(err) => return utils_inherit_error!(data, GetDataCastError, "", err)
+            },
+            None => return utils_new_error!(proc,NoneDataError, "key_usage, key_size data is none")
+        };
+
+        let remain_expired = match token.next() {
+            Some(val) => match val.parse::<i64>() {
+                Ok(ok) => ok,
+                Err(err) => return utils_inherit_error!(data, GetDataCastError, "", err)
+            },
+            None => return utils_new_error!(proc,NoneDataError, "key_usage, remain_expired data is none")
+        };
+
+        ret.fetch.push(KeyMemUsage { name: name, mem_size: key_size, remain_expired_time: remain_expired });
     }
     
     Ok(ret)
