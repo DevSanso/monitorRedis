@@ -2,11 +2,12 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"restapi/constant"
 	"restapi/global/log"
-	"restapi/services"
+	"restapi/global/pool"
 	"restapi/types/core"
 	"restapi/types/errs"
 )
@@ -17,7 +18,7 @@ type handlerImpl struct{
 
 type CustomHandlerFunc func(r *http.Request) *core.ApplicationResponse
 
-func wrapperCustomHandler(fun CustomHandlerFunc) http.HandlerFunc{
+func wrapperCustomHandler(fun CustomHandlerFunc, path string) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := fun(r)
 
@@ -35,14 +36,26 @@ func wrapperCustomHandler(fun CustomHandlerFunc) http.HandlerFunc{
 			}
 		}
 		w.WriteHeader(res.Code)
+
+		serv:= r.Context().Value(constant.HTTP_CONTEXT_SERVICE_KEY)
+		switch path {
+		case "client":
+			pool.ClientServicePool.Put(serv)
+		case "server":
+			pool.ServerServicePool.Put(serv)
+		default:
+			e := errs.InternalError {Ip : r.Host, Url: r.URL.String(), Err: fmt.Errorf("service pool is memory leak [path:%s]", path)}
+			log.Info(e.Error())
+		}
+
 	}
 }
 
 func NewHandler() http.Handler {
 	impl := new(handlerImpl)
 	
-	impl.mux.HandleFunc("/redis/client", wrapperCustomHandler(clientHandler))
-	impl.mux.HandleFunc("/redis/info", wrapperCustomHandler(infoHandler))
+	impl.mux.HandleFunc("/redis/client", wrapperCustomHandler(clientHandler, "client"))
+	impl.mux.HandleFunc("/redis/server", wrapperCustomHandler(serverHandler, "server"))
 	return impl
 }
 
@@ -52,9 +65,9 @@ func (impl *handlerImpl)allocService(r *http.Request) bool {
 	var temp *http.Request = nil
 	switch path {
 	case "client":
-		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, &services.ClientService{}))
-	case "info":
-		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, &services.InfoService{}))
+		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, pool.ClientServicePool.Get()))
+	case "server":
+		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, pool.ServerServicePool.Get()))
 	default:
 		e := errs.BadRequestError {Ip : r.Host, Url: r.URL.String(), Msg: "not support AllocService"}
 		log.Info(e.Error())

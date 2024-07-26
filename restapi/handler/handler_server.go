@@ -9,11 +9,11 @@ import (
 	"restapi/constant"
 )
 
-func infoHandler(r *http.Request) *core.ApplicationResponse {
+func serverHandler(r *http.Request) *core.ApplicationResponse {
 	query := r.URL.Query()
 	action := query.Get("action")
 	
-	var service *services.InfoService = r.Context().Value(constant.HTTP_CONTEXT_SERVICE_KEY).(*services.InfoService) 
+	var service *services.ServerService = r.Context().Value(constant.HTTP_CONTEXT_SERVICE_KEY).(*services.ServerService) 
 	var res *core.ApplicationResponse = nil
 
 	switch action {

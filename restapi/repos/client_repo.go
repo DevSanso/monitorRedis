@@ -10,14 +10,10 @@ import (
 	r_query "restapi/constant/query/redis"
 )
 
-type clientRepo struct {ctx context.Context}
+type ClientRepo struct {}
 
-func NewClientRepo(ctx context.Context) *clientRepo {
-	return &clientRepo{ctx :ctx}
-}
-
-func (cr *clientRepo)List(id int) ([]repo_vo.ClientInfoVO, error) {
-	collectDao, daoErr := dao.NewStdDao(cr.ctx, dao.CollectDB)
+func (cr *ClientRepo)List(id int, ctx context.Context) ([]repo_vo.ClientInfoVO, error) {
+	collectDao, daoErr := dao.NewStdDao(ctx, dao.CollectDB)
 	if daoErr != nil {
 		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
 	}

@@ -28,11 +28,20 @@ type ServerDbConnFailedError struct {
 	Server string
 }
 
+type OutRangeIdxError struct {
+	Ip string
+	Method string
+	Limit int
+}
+
+
 func (e *OOMError)Error() string {
 	return fmt.Sprintf("[OOMError] : (id:%s,url:%s,limit:%f kb,alloc:%f kb)",e.Ip, e.Url, float64(e.LimitSize) / 1024.0, float64(e.AllocSize) /1024.0)
 }
 
-
+func (e *OutRangeIdxError)Error() string {
+	return fmt.Sprintf("[OutRangeIdxError] : (id:%s,method:%s,limit:%d)",e.Ip, e.Method, e.Limit)
+}
 
 func (e *InternalError)Error() string {
 	return fmt.Sprintf("[InternalError] : (id:%s,url:%s,internal:%s)",e.Ip, e.Url, e.Err.Error())

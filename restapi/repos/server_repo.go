@@ -10,14 +10,10 @@ import (
 	"restapi/types/repo_vo"
 )
 
-type infoRepo struct {ctx context.Context}
+type ServerRepo struct {}
 
-func NewInfoRepo(ctx context.Context) *infoRepo {
-	return &infoRepo{ctx :ctx}
-}
-
-func (cr *infoRepo)CpuList(id int, min string, max string) ([]repo_vo.InfoCpuVO, error) {
-	collectDao, daoErr := dao.NewStdDao(cr.ctx, dao.CollectDB)
+func (cr *ServerRepo)CpuList(id int, min string, max string, ctx context.Context) ([]repo_vo.InfoCpuVO, error) {
+	collectDao, daoErr := dao.NewStdDao(ctx, dao.CollectDB)
 	if daoErr != nil {
 		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
 	}
@@ -31,8 +27,8 @@ func (cr *infoRepo)CpuList(id int, min string, max string) ([]repo_vo.InfoCpuVO,
 	return res, nil
 }
 
-func (cr *infoRepo)Stats(id int, collectTime string) (*repo_vo.InfoStatVO, error) {
-	collectDao, daoErr := dao.NewStdDao(cr.ctx, dao.CollectDB)
+func (cr *ServerRepo)Stats(id int, collectTime string, ctx context.Context) (*repo_vo.InfoStatVO, error) {
+	collectDao, daoErr := dao.NewStdDao(ctx, dao.CollectDB)
 	if daoErr != nil {
 		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
 	}

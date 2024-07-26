@@ -11,9 +11,9 @@ import (
 	"restapi/types/service_vo"
 )
 
-type InfoService struct{}
+type ServerService struct{repo repos.ServerRepo}
 
-func (c *InfoService) CpuList(r *http.Request) *core.ApplicationResponse {
+func (c *ServerService) CpuList(r *http.Request) *core.ApplicationResponse {
 	q := r.URL.Query()
 	min := q.Get("min_time")
 	max := q.Get("max_time")
@@ -36,9 +36,9 @@ func (c *InfoService) CpuList(r *http.Request) *core.ApplicationResponse {
 		}
 	}
 
-	infoRepo := repos.NewInfoRepo(r.Context())
+	serverRepo := c.repo
 
-	list, listErr := infoRepo.CpuList(castId, min, max)
+	list, listErr := serverRepo.CpuList(castId, min, max, r.Context())
 
 	errRes := writeIfCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
 	if errRes != nil { return errRes }
@@ -46,7 +46,7 @@ func (c *InfoService) CpuList(r *http.Request) *core.ApplicationResponse {
 	return writeCommonResultFromAppResponse(service_vo.NewInfoCpuUsageVO(list))
 }
 
-func (c *InfoService) Stats(r *http.Request) *core.ApplicationResponse {
+func (c *ServerService) Stats(r *http.Request) *core.ApplicationResponse {
 	q := r.URL.Query()
 	collectTime := q.Get("collect_time")
 	id := q.Get("object_id")
@@ -68,9 +68,9 @@ func (c *InfoService) Stats(r *http.Request) *core.ApplicationResponse {
 		}
 	}
 
-	infoRepo := repos.NewInfoRepo(r.Context())
+	serverRepo := c.repo
 
-	stat, statErr := infoRepo.Stats(castId, collectTime)
+	stat, statErr := serverRepo.Stats(castId, collectTime, r.Context())
 
 	errRes := writeIfCommonErrorFromAppResponse(statErr, r.Host, r.URL.String())
 	if errRes != nil { return errRes }

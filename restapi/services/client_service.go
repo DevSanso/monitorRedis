@@ -10,7 +10,7 @@ import (
 	"restapi/types/errs"
 )
 
-type ClientService struct{}
+type ClientService struct{repo repos.ClientRepo}
 
 func (c *ClientService) List(r *http.Request) *core.ApplicationResponse {
 	q := r.URL.Query()
@@ -25,9 +25,9 @@ func (c *ClientService) List(r *http.Request) *core.ApplicationResponse {
 		}
 	}
 
-	clientRepo := repos.NewClientRepo(r.Context())
+	clientRepo := c.repo
 
-	list, listErr := clientRepo.List(castId)
+	list, listErr := clientRepo.List(castId, r.Context())
 
 	errRes := writeIfCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
 	if errRes != nil { return errRes }
