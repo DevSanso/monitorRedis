@@ -18,7 +18,7 @@ pub struct KeyMemUsageList {
     pub fetch : Vec<KeyMemUsage>
 }
 
-pub fn parsing_key_usage_top_one_hundred(res : String) -> Result<KeyMemUsageList, Box<dyn Error>> {
+pub fn parsing_key_usage_top_ten_hundred(res : String) -> Result<KeyMemUsageList, Box<dyn Error>> {
     let mut token = res.split("\n");
     
     let cursor = match token.next() {

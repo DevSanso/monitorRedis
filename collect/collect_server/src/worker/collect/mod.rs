@@ -31,6 +31,6 @@ pub fn make_one_collect_worker() -> HashMap<&'static str, (Duration, WorkerFn)> 
     register_worker_list!(m, "ConfigAll", 3600, config_get_all_worker::config_get_all_worker);
     register_worker_list!(m, "PingStatus", 20, ping_status_worker::ping_status_worker);
     register_worker_list!(m, "ClusterNodes", 60, cluster_nodes_worker::cluster_nodes_worker);
-    register_worker_list!(m, "KeyusageTop100", 3600, key_usage_top_one_hundred_worker::key_usage_top_one_hundred_worker);
+    register_worker_list!(m, "KeyusageTop1000", 3600, key_usage_top_one_hundred_worker::key_usage_top_ten_hundred_worker);
     m
 }

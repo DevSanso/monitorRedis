@@ -137,5 +137,8 @@
     },
     {
         "DeleteClusterNodes" : ["DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 "]
+    },
+    {
+        "InsertKeyUsageTopTenHundred" : ["INERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $5)"]
     }
 ]

@@ -72,6 +72,7 @@ pub enum PgCommand {
     SyncClusterNodes,
     InsertClusterNodesPing,
     DeleteClusterNodes,
+    InsertKeyUsageTopTenHundred,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
@@ -87,6 +88,7 @@ pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>
         pg_commandline_map_internal.insert(PgCommand::SyncClusterNodes," INSERT INTO redis_cluster_nodes (   link_key,   sync_time,   node_id,   ip,   port,   cluster_port,   type,   master_node,   ping_epoch,   connected_state,   slots )   VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10)   ON CONFLICT(link_key, node_id, ip) DO UPDATE SET   port = $4,   cluster_port = $5,   type = $6,   master_node = $7,   ping_epoch = $8,   connected_state = $9,   slots = $10 ");
         pg_commandline_map_internal.insert(PgCommand::InsertClusterNodesPing," INSERT INTO redis_cluster_nodes_ping (   link_key,   sync_time,   node_id,   ping_send,   ping_recv )   VALUES($1, now(), $2, $3, $4 ) ");
         pg_commandline_map_internal.insert(PgCommand::DeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 ");
+        pg_commandline_map_internal.insert(PgCommand::InsertKeyUsageTopTenHundred,"INERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $5)");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]

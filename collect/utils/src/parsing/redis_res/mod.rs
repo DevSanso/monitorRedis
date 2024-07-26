@@ -5,7 +5,7 @@ mod db_size;
 mod info_commandstats;
 mod config_get_all;
 mod cluster_nodes;
-mod key_usage_top_one_hundred;
+mod key_usage_top_ten_hundred;
 
 pub use client_list::parsing_client_list;
 pub use info_cpu::parsing_info_cpu;
@@ -15,4 +15,4 @@ pub use db_size::parsing_dbsize;
 pub use info_commandstats::parsing_info_commandstats;
 pub use config_get_all::parsing_config_get_all;
 pub use cluster_nodes::parsing_cluster_nodes;
-pub use key_usage_top_one_hundred::{parsing_key_usage_top_one_hundred, KeyMemUsage};
+pub use key_usage_top_ten_hundred::{parsing_key_usage_top_ten_hundred, KeyMemUsage};
