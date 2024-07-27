@@ -55,5 +55,6 @@ func (s *ServicePool)Put(item any) {
 var (
 	ServerServicePool = newServicePool("serverServicePool", 100, services.NewServerServiceFunc)
 	ClientServicePool = newServicePool("serverServicePool", 100, services.NewClientServiceFunc)
+	DbServicePool = newServicePool("serverServicePool", 100, services.NewClientServiceFunc)
 )
 

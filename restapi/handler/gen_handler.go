@@ -43,6 +43,8 @@ func wrapperCustomHandler(fun CustomHandlerFunc, path string) http.HandlerFunc{
 			pool.ClientServicePool.Put(serv)
 		case "server":
 			pool.ServerServicePool.Put(serv)
+		case "db":
+			pool.DbServicePool.Put(serv)
 		default:
 			e := errs.InternalError {Ip : r.Host, Url: r.URL.String(), Err: fmt.Errorf("service pool is memory leak [path:%s]", path)}
 			log.Info(e.Error())
@@ -56,6 +58,7 @@ func NewHandler() http.Handler {
 	
 	impl.mux.HandleFunc("/redis/client", wrapperCustomHandler(clientHandler, "client"))
 	impl.mux.HandleFunc("/redis/server", wrapperCustomHandler(serverHandler, "server"))
+	impl.mux.HandleFunc("/redis/db", wrapperCustomHandler(dbHandler, "db"))
 	return impl
 }
 
@@ -68,6 +71,8 @@ func (impl *handlerImpl)allocService(r *http.Request) bool {
 		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, pool.ClientServicePool.Get()))
 	case "server":
 		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, pool.ServerServicePool.Get()))
+	case "db":
+		temp = r.WithContext(context.WithValue(ctx, constant.HTTP_CONTEXT_SERVICE_KEY, pool.DbServicePool.Get()))
 	default:
 		e := errs.BadRequestError {Ip : r.Host, Url: r.URL.String(), Msg: "not support AllocService"}
 		log.Info(e.Error())

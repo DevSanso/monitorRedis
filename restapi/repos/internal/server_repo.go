@@ -6,11 +6,11 @@ import (
 	"restapi/types/repo_vo"
 )
 
-func InfoRepoGenInfoCpuList(rows *sql.Rows) ([]repo_vo.InfoCpuVO, error) {
-	ret := make([]repo_vo.InfoCpuVO, 0)
+func ServerRepoGenInfoCpuList(rows *sql.Rows) ([]repo_vo.ServerCpuVO, error) {
+	ret := make([]repo_vo.ServerCpuVO, 0)
 
 	for rows.Next() {
-		temp := repo_vo.InfoCpuVO{};
+		temp := repo_vo.ServerCpuVO{}
 
 		err := rows.Scan(&temp.CollectTime, &temp.CpuSys, &temp.CpuUser, &temp.ChildCpuSys, &temp.ChildCpuUser, &temp.UptimeSecond)
 		if err != nil {
@@ -18,11 +18,11 @@ func InfoRepoGenInfoCpuList(rows *sql.Rows) ([]repo_vo.InfoCpuVO, error) {
 		}
 		ret = append(ret, temp)
 	}
-	return ret,nil
+	return ret, nil
 }
 
-func InfoRepoGenInfoStats(row *sql.Row) (*repo_vo.InfoStatVO, error) {
-	buf := new(repo_vo.InfoStatVO);
+func ServerRepoGenInfoStats(row *sql.Row) (*repo_vo.ServerStatVO, error) {
+	buf := new(repo_vo.ServerStatVO)
 
 	err := row.Scan(
 		&buf.CollectTime,

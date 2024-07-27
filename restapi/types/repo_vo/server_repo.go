@@ -1,6 +1,6 @@
 package repo_vo
 
-type InfoCpuVO struct {
+type ServerCpuVO struct {
 	CollectTime string
 	CpuSys float64
 	CpuUser float64
@@ -9,7 +9,7 @@ type InfoCpuVO struct {
     UptimeSecond int64
 }
 
-type InfoStatVO struct {
+type ServerStatVO struct {
 	CollectTime string
     TotalConnectionsReceived int64
     TotalCommandsProcessed   int64

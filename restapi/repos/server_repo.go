@@ -10,33 +10,33 @@ import (
 	"restapi/types/repo_vo"
 )
 
-type ServerRepo struct {}
+type ServerRepo struct{}
 
-func (cr *ServerRepo)CpuList(id int, min string, max string, ctx context.Context) ([]repo_vo.InfoCpuVO, error) {
+func (cr *ServerRepo) CpuList(id int, min string, max string, ctx context.Context) ([]repo_vo.ServerCpuVO, error) {
 	collectDao, daoErr := dao.NewStdDao(ctx, dao.CollectDB)
 	if daoErr != nil {
 		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
 	}
 	defer collectDao.Close()
 
-	res, QueryErr := dao.StdQueryRun[repo_vo.InfoCpuVO](collectDao, r_query.ClientListQuery, internal.InfoRepoGenInfoCpuList,id, min, max)
+	res, QueryErr := dao.StdQueryRun[repo_vo.ServerCpuVO](collectDao, r_query.ClientListQuery, internal.ServerRepoGenInfoCpuList, id, min, max)
 	if QueryErr != nil {
-		return nil, &errs.ServerDbConnExcuteError{Source: QueryErr, Server : "collect", ObjectNames: []string{"client_list"}}
+		return nil, &errs.ServerDbConnExcuteError{Source: QueryErr, Server: "collect", ObjectNames: []string{"client_list"}}
 	}
 
 	return res, nil
 }
 
-func (cr *ServerRepo)Stats(id int, collectTime string, ctx context.Context) (*repo_vo.InfoStatVO, error) {
+func (cr *ServerRepo) Stats(id int, collectTime string, ctx context.Context) (*repo_vo.ServerStatVO, error) {
 	collectDao, daoErr := dao.NewStdDao(ctx, dao.CollectDB)
 	if daoErr != nil {
 		return nil, &errs.ServerDbConnFailedError{Source: daoErr, Server: "collect"}
 	}
 	defer collectDao.Close()
 
-	res, QueryErr := dao.StdQueryOneRun[repo_vo.InfoStatVO](collectDao, r_query.InfoStatsQuery, internal.InfoRepoGenInfoStats,id, collectTime)
+	res, QueryErr := dao.StdQueryOneRun[repo_vo.ServerStatVO](collectDao, r_query.InfoStatsQuery, internal.ServerRepoGenInfoStats, id, collectTime)
 	if QueryErr != nil {
-		return nil, &errs.ServerDbConnExcuteError{Source: QueryErr, Server : "collect", ObjectNames: []string{"client_list"}}
+		return nil, &errs.ServerDbConnExcuteError{Source: QueryErr, Server: "collect", ObjectNames: []string{"client_list"}}
 	}
 
 	return res, nil

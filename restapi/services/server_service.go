@@ -11,7 +11,7 @@ import (
 	"restapi/types/service_vo"
 )
 
-type ServerService struct{repo repos.ServerRepo}
+type ServerService struct{ repo repos.ServerRepo }
 
 func (c *ServerService) CpuList(r *http.Request) *core.ApplicationResponse {
 	q := r.URL.Query()
@@ -41,9 +41,11 @@ func (c *ServerService) CpuList(r *http.Request) *core.ApplicationResponse {
 	list, listErr := serverRepo.CpuList(castId, min, max, r.Context())
 
 	errRes := writeIfCommonErrorFromAppResponse(listErr, r.Host, r.URL.String())
-	if errRes != nil { return errRes }
+	if errRes != nil {
+		return errRes
+	}
 
-	return writeCommonResultFromAppResponse(service_vo.NewInfoCpuUsageVO(list))
+	return writeCommonResultFromAppResponse(service_vo.NewServerCpuUsageVO(list))
 }
 
 func (c *ServerService) Stats(r *http.Request) *core.ApplicationResponse {
@@ -73,7 +75,9 @@ func (c *ServerService) Stats(r *http.Request) *core.ApplicationResponse {
 	stat, statErr := serverRepo.Stats(castId, collectTime, r.Context())
 
 	errRes := writeIfCommonErrorFromAppResponse(statErr, r.Host, r.URL.String())
-	if errRes != nil { return errRes }
+	if errRes != nil {
+		return errRes
+	}
 
 	return writeCommonResultFromAppResponse(stat)
 }
