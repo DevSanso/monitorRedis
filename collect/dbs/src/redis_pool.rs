@@ -1,4 +1,5 @@
 use std::{any::Any, error::Error, fmt::Debug};
+use std::sync::Arc;
 
 use redis::{Client, Cmd, Commands, FromRedisValue, Value};
 
@@ -8,20 +9,10 @@ use core::structure::pool::{Pool, PoolItem};
 use core::utils_inherit_error;
 use core::utils_new_error;
 
-pub struct RedisPool {
-    pool : Pool<RedisRequester, String>,
-    url : String
-}
+pub type RedisPoolAlias =  Arc<OwnedPool<RedisRequester, ()>>;
 
-impl RedisPool {
-    pub fn new(ip : String, url : String) -> Self {
-        RedisPool {
-            pool : Pool::new(ip, Box::new(RedisPool::gen), 10),
-            url
-        }
-    }
-
-    fn gen(url : String) -> Option<RedisRequester> {
+pub fn new_redis_pool(name : String, url : String, max_size : usize) -> RedisPoolAlias {
+    OwnedPool::new(name, Box::new(|_ : () | {
         match Client::open(url) {
             Ok(client) => Some(RedisRequester::new(client)),
             Err(c) => {
@@ -29,27 +20,7 @@ impl RedisPool {
                 None
             }
         }
-    }
-
-    pub fn get(&mut self) -> Result<PoolItem<RedisRequester>, Box<dyn Error>> {
-        self.pool.get(self.url.clone())
-    }
-
-    pub fn ping(&mut self) -> Result<(), Box<dyn Error>> {
-        let c = self.get();
-        if c.is_err() {
-            return utils_inherit_error!(connection, GetConnectionFailedError, "ping connection get failed", c.err().unwrap());
-        }
-        let mut val = c.unwrap();
-        let conn = val.get_value();
-
-        let ret = conn.ping();
-        if ret.is_err() {
-            return Err(ret.err().unwrap())
-        }
-
-        Ok(())
-    }
+    }), max_size)
 }
 
 pub struct RedisRequester {

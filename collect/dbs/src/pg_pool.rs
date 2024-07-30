@@ -1,24 +1,16 @@
 use std::error::Error;
+use std::sync::Arc;
 
 use postgres::{self, Row, Transaction};
 use log::*;
 
-use core::structure::pool::{Pool, PoolItem};
+use core::structure::owned_pool::{OwnedPool, PoolItemOwned};
 use core::utils_inherit_error;
-pub struct PgPool {
-    pool : Pool<PgConnecter, String>,
-    url : String
-}
 
-impl PgPool {
-    pub fn new(url : String) -> Self {
-        PgPool {
-            pool : Pool::new(String::from("pg_pool"),Box::new(PgPool::gen), 10),
-            url
-        }
-    }
+pub type PgPoolAlias =  Arc<OwnedPool<PgConnecter, ()>>;
 
-    fn gen(url : String) -> Option<PgConnecter> {
+pub fn new_pg_pool(name : String, url : String, max_size : usize) -> PgPoolAlias {
+    OwnedPool::new(name, Box::new(|_ : () | {
         match postgres::Client::connect(url.as_str(), postgres::NoTls) {
             Ok(client) => Some(PgConnecter::new(client)),
             Err(c) =>  {
@@ -26,11 +18,7 @@ impl PgPool {
                 None
             }
         }
-    }
-
-    pub fn get(&mut self) -> Result<PoolItem<PgConnecter>, Box<dyn Error>> {
-        self.pool.get(self.url.clone())
-    }
+    }), max_size)
 }
 
 pub struct PgTrans<'a> {

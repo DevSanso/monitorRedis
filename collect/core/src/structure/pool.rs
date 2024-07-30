@@ -151,7 +151,7 @@ impl<T,P> Pool<T,P> {
         drop(g_lock);
     }
 
-    pub fn new_alloc_if_len_zeros(&mut self, ps : Vec<P>) ->Result<Vec<T>,Box<dyn Error>> {
+    fn new_alloc_if_len_zeros(&mut self, ps : Vec<P>) ->Result<Vec<T>,Box<dyn Error>> {
         let g_lock = self.mutex_unit.lock().unwrap();
         let l = ps.len();
 
@@ -181,7 +181,7 @@ impl<T,P> Pool<T,P> {
         Ok(ret)
     }
     #[inline]
-    pub fn new_alloc_if_len_zero(&mut self, p : P) ->Result<T,Box<dyn Error>> {
+    fn new_alloc_if_len_zero(&mut self, p : P) ->Result<T,Box<dyn Error>> {
         let v = vec![p];
         let mut r = self.new_alloc_if_len_zeros(v)?;
         Ok(r.pop().unwrap())

@@ -207,44 +207,23 @@ impl SqliteConn {
 
 }
 
-pub struct SqlitePool {
-    p : Pool<SqliteConn, String>,
-    file_path : String
-}
+pub type SqlitePoolAlias = Arc<OwnedPool<SqliteConn, ()>>;
 
-impl SqlitePool {
-    pub fn new(file_path : String) -> Self {
-        return SqlitePool { p: Pool::new(String::from("sqlite_pool"), Box::new(Self::gen), 1) , file_path}
-    }
+pub fn new_redis_pool(name : String, file_path : String, max_size : usize) -> SqlitePoolAlias {
+    OwnedPool::new(name, Box::new(|_ : () | {
 
-    pub fn get(&mut self) -> Result<PoolItem<SqliteConn>, Box<dyn Error>> {
-        self.p.get(self.file_path.clone())
-    }
-
-    fn gen(path : String) -> Option<SqliteConn> {
+        #[cfg(not(test))]
         let c = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY);
-        if c.is_err() {
-            trace!("SqlitePool - gen : {}", c.err().unwrap());
-            return None;
-        }
-
-        Some(SqliteConn::new(c.unwrap()))
-    }
-    #[cfg(test)]
-    pub fn new_test() -> Self {
-        return SqlitePool { p: Pool::new(String::from("sqlite_pool"), Box::new(Self::gen_test), 1), file_path : String::from("")}
-    }
-
-    #[cfg(test)]
-    fn gen_test(_ : String) -> Option<SqliteConn> {
+        #[cfg(test)]
         let c = Connection::open_in_memory_with_flags(OpenFlags::SQLITE_OPEN_READ_WRITE);
+        
         if c.is_err() {
             trace!("SqlitePool - gen : {}", c.err().unwrap());
             return None;
         }
 
         Some(SqliteConn::new(c.unwrap()))
-    }
+    }), max_size)
 }
 
 #[cfg(test)]
