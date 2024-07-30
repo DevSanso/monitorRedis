@@ -6,8 +6,9 @@ use std::sync::{Arc, Mutex};
 
 use chrono::Timelike;
 
-use dbs::sqlite_pool::SqlitePool;
-use dbs::{pg_pool::PgPool, redis_pool::RedisPool};
+use dbs::redis_pool::new_redis_pool;
+use dbs::sqlite_pool::SqlitePoolAlias;
+use dbs::{pg_pool::PgPoolAlias, redis_pool::RedisPoolAlias};
 use crate::typed::*;
 use thread_pool::{TPool,TItem};
 use core::{utils_inherit_error, utils_new_error};
@@ -17,11 +18,11 @@ type RedisLinkId = i32;
 type RedisConnRunFlag = HashMap<&'static str, Arc<Mutex<bool>>>;
 
 pub struct RedisThreadExecutor {
-    pub(super) collect_pool : Arc<Mutex<PgPool>>,
-    pub(super) info_pool : Arc<Mutex<SqlitePool>>,
+    pub(super) collect_pool : PgPoolAlias,
+    pub(super) info_pool : SqlitePoolAlias,
     pub(super) single_conn_fn : SelectRedisConnFn,
     pub(super) worker_fn_list : HashMap<&'static str, (Duration, WorkerFn)>,
-    pub(super) redis_pools : HashMap<RedisHashCode, (Arc<Mutex<RedisPool>>, RedisLinkId)>,
+    pub(super) redis_pools : HashMap<RedisHashCode, (RedisPoolAlias, RedisLinkId)>,
     pub(super) redis_worker_flags  : HashMap<RedisHashCode, RedisConnRunFlag>,
     pub(super) thread_pool : TPool<WrapperWorkerArgs>,
     pub(super) run_workers_list : Option<Vec<(RedisHashCode, &'static str)>>,
@@ -68,14 +69,15 @@ impl RedisThreadExecutor {
             let fined =h_ref.keys().any(|x|{x.as_slice() == new_list[idx].hash_code.as_slice()});
             if !fined {
                 let cfg = &new_list[idx].conn_cfg;
-                let p = RedisPool::new(cfg.ip.clone(),
-                    dbs::utils::create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name));
+                let p = new_redis_pool(cfg.ip.clone(), 
+                dbs::utils::create_redis_url(cfg.user.as_str(), cfg.password.as_str(), cfg.ip.as_str(), cfg.port, cfg.db_name), 20);
+
                 push_list.push((p, &new_list[idx].hash_code, new_list[idx].link_id));
             }
         }
 
         for new_p in push_list {
-            h_ref.insert(new_p.1.clone(), (Arc::new(Mutex::new(new_p.0)), new_p.2));
+            h_ref.insert(new_p.1.clone(), (new_p.0, new_p.2));
             let hash_keys = key_list.iter().fold(HashMap::new(), |mut acc,x| {
                 acc.insert(*x, Arc::new(Mutex::new(false)));
                 acc
@@ -98,12 +100,16 @@ impl RedisThreadExecutor {
             *f_g = true;
         }
         
-        let mut redis_p = arg_some.redis_pool.lock().unwrap();
-        let mut p_p = arg_some.pg_pool.lock().unwrap();
+        let redis_p = {
+            arg_some.redis_pool.get_owned(())
+        };
+        let p_p = {
+            arg_some.pg_pool.get_owned(())
+        };
 
         {
-            let p_c_ret = p_p.get();
-            let redis_c_ret = redis_p.get();
+            let p_c_ret = p_p;
+            let redis_c_ret = redis_p;
 
             if redis_c_ret.is_err() { 
                 let mut f_g = flag.lock().unwrap();
@@ -162,8 +168,10 @@ impl RedisThreadExecutor {
     
     pub fn load_redis_connect_info(&mut self) -> Result<(), Box<dyn Error>>{
         let list = {
-            let mut p: std::sync::MutexGuard<SqlitePool> = self.info_pool.lock().unwrap();
-            let conn = match p.get() {
+            let mut p = {
+                self.info_pool.get_owned(())
+            };
+            let conn = match p {
                 Ok(ok) => ok,
                 Err(err) => return utils_inherit_error!(connection , GetConnectionFailedError, "load_redis_connect_info", err)
             };

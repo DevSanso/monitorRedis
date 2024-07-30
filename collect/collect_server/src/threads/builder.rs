@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 use std::time::Duration;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::threads::executor::RedisThreadExecutor;
 
-use dbs::sqlite_pool::SqlitePool;
-use dbs::pg_pool::PgPool;
+use dbs::sqlite_pool::SqlitePoolAlias;
+use dbs::pg_pool::PgPoolAlias;
 use crate::typed::*;
 use thread_pool::TPool;
 
 pub struct RedisExectorBulider {
-    pg_pool : Option<Arc<Mutex<PgPool>>>,
-    sqlite_pool : Option<Arc<Mutex<SqlitePool>>>,
+    pg_pool : Option<PgPoolAlias>,
+    sqlite_pool : Option<SqlitePoolAlias>,
     workers : HashMap<&'static str,(Duration, WorkerFn)>,
     name : &'static str,
     alloc_size : usize,
@@ -45,11 +45,11 @@ impl RedisExectorBulider {
         self
     }
 
-    pub fn register_pg(mut self, pg_pool : &'_ Arc<Mutex<PgPool>>) -> Self {
+    pub fn register_pg(mut self, pg_pool : &'_ PgPoolAlias) -> Self {
         self.pg_pool = Some(Arc::clone(pg_pool));
         self
     }
-    pub fn register_sqlite(mut self, sqlite_pool : &'_ Arc<Mutex<SqlitePool>>) -> Self {
+    pub fn register_sqlite(mut self, sqlite_pool : &'_ SqlitePoolAlias) -> Self {
         self.sqlite_pool = Some(Arc::clone(sqlite_pool));
         self
     }

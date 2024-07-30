@@ -4,21 +4,26 @@ use std::sync::Arc;
 use postgres::{self, Row, Transaction};
 use log::*;
 
-use core::structure::owned_pool::{OwnedPool, PoolItemOwned};
+use core::structure::owned_pool::{OwnedPool};
 use core::utils_inherit_error;
 
 pub type PgPoolAlias =  Arc<OwnedPool<PgConnecter, ()>>;
 
 pub fn new_pg_pool(name : String, url : String, max_size : usize) -> PgPoolAlias {
-    OwnedPool::new(name, Box::new(|_ : () | {
-        match postgres::Client::connect(url.as_str(), postgres::NoTls) {
-            Ok(client) => Some(PgConnecter::new(client)),
-            Err(c) =>  {
-                trace!("PgPool - gen : {}", c);
-                None
+
+    let f = (|r : String| -> Box<dyn Fn(()) -> Option<PgConnecter>> {
+        Box::new(move |()| {
+            match postgres::Client::connect(r.as_str(), postgres::NoTls) {
+                Ok(client) => Some(PgConnecter::new(client)),
+                Err(c) =>  {
+                    trace!("PgPool - gen : {}", c);
+                    None
+                }
             }
-        }
-    }), max_size)
+        })
+    })(url);
+    
+    OwnedPool::new(name, f, max_size)
 }
 
 pub struct PgTrans<'a> {

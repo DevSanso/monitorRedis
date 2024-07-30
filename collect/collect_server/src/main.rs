@@ -15,25 +15,26 @@ use std::sync::{Arc, Mutex};
 use serde_json;
 use chrono::Timelike;
 
-use dbs::sqlite_pool::SqlitePool;
+use dbs::sqlite_pool::{SqlitePoolAlias, new_sqlite_pool};
+use dbs::pg_pool::{PgPoolAlias, new_pg_pool};
+use dbs::redis_pool::{RedisPoolAlias, new_redis_pool};
 use crate::threads::builder::RedisExectorBulider;
 
 use config::Config;
 use logger::{init_logger, LoggerConfig};
-use dbs::pg_pool::PgPool;
 use dbs::utils::create_pg_url;
 use worker::collect::make_one_collect_worker;
 use core::utils_new_error;
 
-fn get_pool(cfg : &Config) -> (Arc<Mutex<PgPool>>, Arc<Mutex<SqlitePool>>) {
+fn get_pool(cfg : &Config) -> (PgPoolAlias, SqlitePoolAlias) {
     let pg_url = create_pg_url(cfg.pg_config.user.as_str(), 
     cfg.pg_config.password.as_str(), 
     cfg.pg_config.ip.as_str(), 
     cfg.pg_config.port, 
     cfg.pg_config.db_name.as_str());
 
-    let pg_p = Arc::new(Mutex::new(PgPool::new(pg_url)));
-    let sqlite_p = Arc::new(Mutex::new(SqlitePool::new(cfg.sqlite_path.clone())));
+    let pg_p = new_pg_pool(String::from("collectDB"), pg_url, 30);
+    let sqlite_p = new_sqlite_pool(String::from("infoDB"), cfg.sqlite_path.to_string(), 2);
 
     (pg_p, sqlite_p)
 }
