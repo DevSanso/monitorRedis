@@ -1,15 +1,36 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::sync::Arc;
 
 use rusqlite::{Connection, OpenFlags, Rows, Row};
 use rusqlite::types::{ToSql, ToSqlOutput, Type, Value, ValueRef};
 
 use log::*;
 
-use core::structure::pool::{Pool, PoolItem};
+use core::structure::owned_pool::OwnedPool;
 
 use core::utils_inherit_error;
 use core::utils_new_error;
+
+pub type SqlitePoolAlias = Arc<OwnedPool<SqliteConn, ()>>;
+
+
+pub fn new_sqlite_pool(name : String, path : String, max_size : usize) -> SqlitePoolAlias {
+    OwnedPool::new(name, Box::new( move |_ : () | -> Option<SqliteConn> {
+        let p = path.clone();
+        let c = match p.as_str() {
+            "" => Connection::open_in_memory_with_flags(OpenFlags::SQLITE_OPEN_READ_WRITE),
+            _ => Connection::open_with_flags(p.as_str(), OpenFlags::SQLITE_OPEN_READ_ONLY)
+        };
+
+        if c.is_err() {
+            trace!("SqlitePool - gen : {}", c.err().unwrap());
+            return None;
+        }
+
+        Some(SqliteConn::new(c.unwrap()))
+    }), max_size)
+}
 
 #[derive(Default)]
 pub struct SqliteRows {
@@ -207,55 +228,15 @@ impl SqliteConn {
 
 }
 
-pub struct SqlitePool {
-    p : Pool<SqliteConn, String>,
-    file_path : String
-}
-
-impl SqlitePool {
-    pub fn new(file_path : String) -> Self {
-        return SqlitePool { p: Pool::new(String::from("sqlite_pool"), Box::new(Self::gen), 1) , file_path}
-    }
-
-    pub fn get(&mut self) -> Result<PoolItem<SqliteConn>, Box<dyn Error>> {
-        self.p.get(self.file_path.clone())
-    }
-
-    fn gen(path : String) -> Option<SqliteConn> {
-        let c = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY);
-        if c.is_err() {
-            trace!("SqlitePool - gen : {}", c.err().unwrap());
-            return None;
-        }
-
-        Some(SqliteConn::new(c.unwrap()))
-    }
-    #[cfg(test)]
-    pub fn new_test() -> Self {
-        return SqlitePool { p: Pool::new(String::from("sqlite_pool"), Box::new(Self::gen_test), 1), file_path : String::from("")}
-    }
-
-    #[cfg(test)]
-    fn gen_test(_ : String) -> Option<SqliteConn> {
-        let c = Connection::open_in_memory_with_flags(OpenFlags::SQLITE_OPEN_READ_WRITE);
-        if c.is_err() {
-            trace!("SqlitePool - gen : {}", c.err().unwrap());
-            return None;
-        }
-
-        Some(SqliteConn::new(c.unwrap()))
-    }
-}
-
 #[cfg(test)]
 mod pool_tests {
 
     #[test]
     fn pool_test() -> Result<(), Box<dyn std::error::Error>> {
-        let mut p = super::SqlitePool::new_test();
+        let mut p = super::new_sqlite_pool(String::from("test"),String::from(""), 10);
 
         {
-            let mut conn = p.get()?;
+            let mut conn = p.get_owned(())?;
             let real_conn = conn.get_value();
             real_conn.execute("create table a (b int, f real, c varchar(12), d varchar(12));".to_string() , &[])?;
             real_conn.execute("insert into a values(?,1.0,?,NULL)".to_string(), &[&(12 as i64), &"123".to_string()])?;
@@ -264,7 +245,7 @@ mod pool_tests {
 
 
         {
-            let mut conn = p.get()?;
+            let mut conn = p.get_owned(())?;
             let real_conn = conn.get_value();
             real_conn.query("select * from a".to_string() , &[],|x| {
                 assert_eq!(x.get_i64_data(0, 0)?, x.get_i64_data(1, 0)?,"1 row not eq");

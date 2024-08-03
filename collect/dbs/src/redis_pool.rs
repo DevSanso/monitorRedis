@@ -1,55 +1,26 @@
 use std::{any::Any, error::Error, fmt::Debug};
+use std::sync::Arc;
 
 use redis::{Client, Cmd, Commands, FromRedisValue, Value};
 
 use log::*;
 
-use core::structure::pool::{Pool, PoolItem};
+use core::structure::owned_pool::OwnedPool;
 use core::utils_inherit_error;
 use core::utils_new_error;
 
-pub struct RedisPool {
-    pool : Pool<RedisRequester, String>,
-    url : String
-}
+pub type RedisPoolAlias =  Arc<OwnedPool<RedisRequester, ()>>;
 
-impl RedisPool {
-    pub fn new(ip : String, url : String) -> Self {
-        RedisPool {
-            pool : Pool::new(ip, Box::new(RedisPool::gen), 10),
-            url
-        }
-    }
-
-    fn gen(url : String) -> Option<RedisRequester> {
-        match Client::open(url) {
+pub fn new_redis_pool(name : String, url : String, max_size : usize) -> RedisPoolAlias {
+    OwnedPool::new(name, Box::new( move|_ : () | {
+        match Client::open(url.clone()) {
             Ok(client) => Some(RedisRequester::new(client)),
             Err(c) => {
                 trace!("RedisPool - gen : {}", c);
                 None
             }
         }
-    }
-
-    pub fn get(&mut self) -> Result<PoolItem<RedisRequester>, Box<dyn Error>> {
-        self.pool.get(self.url.clone())
-    }
-
-    pub fn ping(&mut self) -> Result<(), Box<dyn Error>> {
-        let c = self.get();
-        if c.is_err() {
-            return utils_inherit_error!(connection, GetConnectionFailedError, "ping connection get failed", c.err().unwrap());
-        }
-        let mut val = c.unwrap();
-        let conn = val.get_value();
-
-        let ret = conn.ping();
-        if ret.is_err() {
-            return Err(ret.err().unwrap())
-        }
-
-        Ok(())
-    }
+    }), max_size)
 }
 
 pub struct RedisRequester {
@@ -171,6 +142,27 @@ impl RedisRequester {
 
         Ok(())
     }
+    pub fn set_app_name(&mut self, application_name : &'_ str) -> Result<(), Box<dyn Error>> {
+        let mut cmd = Cmd::new();
+        cmd.arg("CLIENT");
+        cmd.arg("SETNAME");
+        cmd.arg(application_name);
+
+        let mut conn = {
+            let c = self.client.get_connection();
+            if c.is_err() {
+                return utils_inherit_error!(connection, GetConnectionFailedError, "", c.err().unwrap());
+            }
+            c.unwrap()
+        };
+
+        let ret : Value = match cmd.query(&mut conn) {
+            Ok(ok) => ok,
+            Err(err) => return utils_inherit_error!(connection, CommandRunError, "", err)
+        };
+        
+        Ok(())
+    }
     pub fn run_command(&mut self, command : &'_ str, args : &'_ [&'_ str]) -> Result<String, Box<dyn Error>> {
         let mut cmd = Cmd::new();
         let split_cmd = self.parsing_args(command, args)?;
@@ -187,11 +179,14 @@ impl RedisRequester {
             c.unwrap()
         };
         
-        let ret : Value = cmd.query(&mut conn)?;
+        let ret : Value = match cmd.query(&mut conn) {
+            Ok(ok) => ok,
+            Err(err) => return utils_inherit_error!(connection, CommandRunError, "", err)
+        };
 
         let s = match ret {
             Value::Nil => return utils_new_error!(fetch, NilDataError, ""),
-            Value::Okay => return utils_new_error!(fetch, NilDataError, ""),
+            Value::Okay => String::from(""),
             Value::Status(s) => s,
             Value::Bulk(v) => Self::bulk_to_string(&v)?,
             Value::Data(b) => String::from_utf8(b)?,
