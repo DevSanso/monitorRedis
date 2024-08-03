@@ -54,7 +54,7 @@ impl<T> TPool<T> where T : 'static + Send + Sync  {
             
             let _ = thread::Builder::new()
                 .name(format!("{}:{}",name, i))
-                .stack_size(2 *  1024 * 1024)
+                .stack_size(3 *  1024 * 1024)
             .spawn(|| {
                 entry_point(c_q, c_kill);
             });

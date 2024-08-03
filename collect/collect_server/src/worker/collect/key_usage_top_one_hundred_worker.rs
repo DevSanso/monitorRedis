@@ -13,8 +13,8 @@ use md5::digest::Key;
 use utils::parsing::redis_res::{parsing_key_usage_top_ten_hundred, KeyMemUsage};
 
 #[inline]
-fn push_and_sort_buffer_data(dst : &mut [KeyMemUsage;4000], src : &'_ [KeyMemUsage]) {
-    dst[100..src.len() + 1000].clone_from_slice(src);
+fn push_and_sort_buffer_data(dst : &mut [KeyMemUsage;4500], src : &'_ [KeyMemUsage]) {
+    dst[1000..src.len() + 1000].clone_from_slice(src);
     dst.sort_by(|a,b| {a.mem_size.partial_cmp(&b.mem_size).unwrap()});
     dst.reverse();
 }
@@ -23,7 +23,7 @@ pub fn key_usage_top_ten_hundred_worker(link_key : i32, redis_conn : &'_ mut dbs
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::GetMemoryKeyUsage3000Range).unwrap();
     
     let mut cursor = -1;
-    let mut buffer : [KeyMemUsage;4000] = array::from_fn(|_| KeyMemUsage::default());
+    let mut buffer : [KeyMemUsage;4500] = array::from_fn(|_| KeyMemUsage::default());
 
     while cursor != 0 {
         let result_opt = if cursor == -1 {
