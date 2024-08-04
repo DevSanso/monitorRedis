@@ -36,7 +36,7 @@ impl RedisThreadExecutor {
         let fn_map = &mut self.redis_worker_flags;
         
         let size = new_list.len();
-        let mut delete_list = Vec::with_capacity(size);
+        let mut retain_list = Vec::with_capacity(size);
 
         for idx in 0..size {
             let find_redis = h_ref.keys().any(|x| {
@@ -44,14 +44,14 @@ impl RedisThreadExecutor {
             });
 
             if !find_redis {
-                delete_list.push(true);
+                retain_list.push(false);
             }else {
-                delete_list.push(false);
+                retain_list.push(true);
             }
         }
-        let mut iter = delete_list.iter();
+        let mut iter = retain_list.iter();
         h_ref.retain(|_,_| {*iter.next().unwrap()});
-        iter = delete_list.iter();
+        iter = retain_list.iter();
         fn_map.retain(|_,_| {*iter.next().unwrap()});
         
     }
@@ -168,7 +168,7 @@ impl RedisThreadExecutor {
     
     pub fn load_redis_connect_info(&mut self) -> Result<(), Box<dyn Error>>{
         let list = {
-            let mut p = {
+            let p = {
                 self.info_pool.get_owned(())
             };
             let conn = match p {
