@@ -22,6 +22,7 @@ fn slot_pg_bind_value(arr : &[i32]) -> Option<String> {
 }
 
 pub fn cluster_nodes_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
+    redis_conn.set_app_name("collect_cluster_nodes")?;
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::GetClusterNodes).unwrap();
  
     let result = redis_conn.run_command(cmd, &[])?;
