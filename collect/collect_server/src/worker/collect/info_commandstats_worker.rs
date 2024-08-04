@@ -8,6 +8,7 @@ use dbs::pg_pool::PgUploader;
 use utils::parsing::redis_res::parsing_info_commandstats;
 
 pub fn info_commandstats_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
+    redis_conn.set_app_name("collect_commandstats")?;
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::InfoCommandStats).unwrap();
     let result = redis_conn.run_command(cmd, &[])?;
     

@@ -20,6 +20,7 @@ fn push_and_sort_buffer_data(dst : &mut [KeyMemUsage;4500], src : &'_ [KeyMemUsa
 }
 
 pub fn key_usage_top_ten_hundred_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
+    redis_conn.set_app_name("collect_key_usage")?;
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::GetMemoryKeyUsage3000Range).unwrap();
     
     let mut cursor = -1;

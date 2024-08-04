@@ -7,6 +7,7 @@ use dbs_cmd;
 use utils::parsing::redis_res::parsing_client_list;
 
 pub fn client_list_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
+    redis_conn.set_app_name("collect_client_list")?;
     let cmd = dbs_cmd::REIDS_COMMANDLINE_MAP.get(&dbs_cmd::RedisCommand::ClientList).unwrap();
     let result = redis_conn.run_command(cmd, &[])?;
     
