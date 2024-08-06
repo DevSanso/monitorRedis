@@ -19,7 +19,7 @@ pub fn parsing_commandstat_datas(cmd : String, datas : Split<&'_ str>) -> Result
 
     for data in datas {
         let (key, val) = split_eq_tuple(data)?;
-        match key.as_str() {
+        match key {
             "calls" => c.calls = val.parse()?,
             "usec" => c.usec = val.parse()?,
             "usec_per_call" => c.usec_per_call = val.parse()?,
@@ -44,7 +44,7 @@ pub fn parsing_info_commandstats(res : String) -> Result<Vec<CommandStat>, Box<d
     for stri in split {
         let temp = split_colon_tuple(stri)?;
         let datas = temp.1.split(",");
-        let obj = parsing_commandstat_datas(temp.0, datas);
+        let obj = parsing_commandstat_datas(temp.0.to_string(), datas);
 
         if obj.is_err() {
             let err = obj.err().unwrap();

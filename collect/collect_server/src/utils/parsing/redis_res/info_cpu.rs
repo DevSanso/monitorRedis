@@ -25,12 +25,12 @@ pub struct InfoCpu {
 fn mapping_info_cpu(r : &mut InfoCpu, raw_data : &'_ str) -> Result<(), Box<dyn Error>> {
     let s = split_colon_tuple(raw_data)?;
 
-    match s.0.as_str() {
-        "used_cpu_sys" => r.cpu_sys = s.1.as_str().trim().parse()?,
-        "used_cpu_user" => r.cpu_user = s.1.as_str().trim().parse()?,
-        "used_cpu_sys_children" => r.child_cpu_sys = s.1.as_str().trim().parse()?,
-        "used_cpu_user_children" => r.child_cpu_user = s.1.as_str().trim().parse()?,
-        _ => return utils_new_error!(data, CantMappingKeyError, s.0.as_str())
+    match s.0 {
+        "used_cpu_sys" => r.cpu_sys = s.1.trim().parse()?,
+        "used_cpu_user" => r.cpu_user = s.1.trim().parse()?,
+        "used_cpu_sys_children" => r.child_cpu_sys = s.1.trim().parse()?,
+        "used_cpu_user_children" => r.child_cpu_user = s.1.trim().parse()?,
+        _ => return utils_new_error!(data, CantMappingKeyError, s.0)
     }
 
     Ok(())

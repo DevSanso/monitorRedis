@@ -21,7 +21,7 @@ fn mapping_info_keyspace(line :&'_ str) -> Result<InfoKeySpace, Box<dyn Error>> 
     let datas : Vec<&str> = tuple.1.split(",").collect();
     
     Ok(InfoKeySpace {
-        db_name : tuple.0,
+        db_name : tuple.0.to_string(),
         key_cnt : {
             split_eq_tuple(datas[0])?.1.parse()?
         },

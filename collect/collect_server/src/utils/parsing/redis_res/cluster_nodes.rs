@@ -36,7 +36,7 @@ fn parsing_cluster_node(line : &'_ str) -> Result<ClusterNode, Box<dyn Error>> {
                 }
                 let (ip, ports) = s.unwrap();
 
-                ret.ip = ip;
+                ret.ip = ip.to_string();
                 let mut port = None;
                 let mut cport = None;
                 {
