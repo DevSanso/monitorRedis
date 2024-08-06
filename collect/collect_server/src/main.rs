@@ -3,6 +3,7 @@ mod worker;
 mod threads;
 mod typed;
 mod db_info;
+mod utils;
 
 
 use std::env;

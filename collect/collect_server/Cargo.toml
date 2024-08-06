@@ -10,7 +10,6 @@ core = {path = "../core"}
 dbs = {path = "../dbs"}
 dbs_cmd = {path = "../dbs_cmd"}
 logger = {path = "../logger"}
-utils = {path = "../utils"}
 thread_pool = {path = "../thread_pool"}
 
 serde_json = "1.0.116"

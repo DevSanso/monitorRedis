@@ -13,6 +13,7 @@ mod config_get_all_worker;
 mod ping_status_worker;
 mod cluster_nodes_worker;
 mod key_usage_top_one_hundred_worker;
+mod info_keyspace_worker;
 
 macro_rules! register_worker_list {
     ($m : expr, $name: expr, $interval : expr, $func : expr) => {

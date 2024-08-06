@@ -2,3 +2,4 @@
 mod macros;
 pub mod errs;
 pub mod structure;
+pub mod utils;

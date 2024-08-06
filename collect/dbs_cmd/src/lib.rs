@@ -14,12 +14,8 @@ pub enum RedisCommand {
     InfoCommandStats,
     InfoKeySpace,
     InfoReplication,
-    GetDatabaseCount,
-    GetLimitClientCount,
-    GetRedisLimitMemorySize,
     GetClusterGenKeySlotSize,
     GetClusterNodes,
-    GetMemoryUsageFromKey,
     GetAllConfig,
     GetMemoryKeyUsage3000Range,
 }
@@ -40,21 +36,11 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
         reids_commandline_map_internal.insert(RedisCommand::InfoCommandStats, "info commandstats");
         reids_commandline_map_internal.insert(RedisCommand::InfoKeySpace, "info keyspace");
         reids_commandline_map_internal.insert(RedisCommand::InfoReplication, "info replication");
-        reids_commandline_map_internal
-            .insert(RedisCommand::GetDatabaseCount, "config get databases");
-        reids_commandline_map_internal
-            .insert(RedisCommand::GetLimitClientCount, "config get maxclients");
-        reids_commandline_map_internal.insert(
-            RedisCommand::GetRedisLimitMemorySize,
-            "config get maxmemory",
-        );
         reids_commandline_map_internal.insert(
             RedisCommand::GetClusterGenKeySlotSize,
             "cluster countkeysinslot",
         );
         reids_commandline_map_internal.insert(RedisCommand::GetClusterNodes, "cluster nodes");
-        reids_commandline_map_internal
-            .insert(RedisCommand::GetMemoryUsageFromKey, "MEMORY USAGE ?");
         reids_commandline_map_internal.insert(RedisCommand::GetAllConfig, "config get *");
         reids_commandline_map_internal.insert(RedisCommand::GetMemoryKeyUsage3000Range,"eval \"local scan_val = redis.call('scan', ARGV[1], 'count', 3000);local ks = scan_val[2];local ks_usage = {};local idx = 1;local usage = 0; for k, value in pairs(ks) do local reply = redis.pcall('memory','usage', value); local expired = redis.call('ttl', value); ks_usage[idx] = {value, reply, expired };idx = idx + 1; end;  return {scan_val[1],ks_usage}\" 0 ? ");
         reids_commandline_map_internal
@@ -73,6 +59,7 @@ pub enum PgCommand {
     InsertClusterNodesPing,
     DeleteClusterNodes,
     InsertKeyUsageTopTenHundred,
+    InsertInfoKeySpace,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
@@ -88,7 +75,8 @@ pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>
         pg_commandline_map_internal.insert(PgCommand::SyncClusterNodes," INSERT INTO redis_cluster_nodes (   link_key,   sync_time,   node_id,   ip,   port,   cluster_port,   type,   master_node,   ping_epoch,   connected_state,   slots )   VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10)   ON CONFLICT(link_key, node_id, ip) DO UPDATE SET   port = $4,   cluster_port = $5,   type = $6,   master_node = $7,   ping_epoch = $8,   connected_state = $9,   slots = $10 ");
         pg_commandline_map_internal.insert(PgCommand::InsertClusterNodesPing," INSERT INTO redis_cluster_nodes_ping (   link_key,   sync_time,   node_id,   ping_send,   ping_recv )   VALUES($1, now(), $2, $3, $4 ) ");
         pg_commandline_map_internal.insert(PgCommand::DeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 ");
-        pg_commandline_map_internal.insert(PgCommand::InsertKeyUsageTopTenHundred,"INERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $5)");
+        pg_commandline_map_internal.insert(PgCommand::InsertKeyUsageTopTenHundred,"INSERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)");
+        pg_commandline_map_internal.insert(PgCommand::InsertInfoKeySpace,"INSERT INTO redis_info_keyspace(link_key, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]

@@ -5,6 +5,5 @@ members = [
     "dbs",
     "dbs_cmd",
     "collect_server",
-    "thread_pool",
-    "utils"
+    "thread_pool"
 ]

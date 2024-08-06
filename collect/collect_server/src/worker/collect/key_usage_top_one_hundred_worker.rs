@@ -10,7 +10,7 @@ use dbs;
 use dbs_cmd;
 use dbs::pg_pool::PgUploader;
 use md5::digest::Key;
-use utils::parsing::redis_res::{parsing_key_usage_top_ten_hundred, KeyMemUsage};
+use crate::utils::parsing::redis_res::{parsing_key_usage_top_ten_hundred, KeyMemUsage};
 
 #[inline]
 fn push_and_sort_buffer_data(dst : &mut [KeyMemUsage;4500], src : &'_ [KeyMemUsage]) {

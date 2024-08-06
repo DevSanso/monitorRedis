@@ -5,7 +5,7 @@ use dbs;
 use dbs_cmd;
 use dbs::pg_pool::PgUploader;
 
-use utils::parsing::redis_res::parsing_cluster_nodes;
+use crate::utils::parsing::redis_res::parsing_cluster_nodes;
 
 fn slot_pg_bind_value(arr : &[i32]) -> Option<String> {
     if arr.len() == 0 {

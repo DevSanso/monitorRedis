@@ -4,7 +4,7 @@ use dbs;
 use dbs_cmd;
 use dbs::pg_pool::PgUploader;
 
-use utils::parsing::redis_res::{parsing_confg_get_databases, parsing_dbsize};
+use crate::utils::parsing::redis_res::parsing_dbsize;
 
 pub fn db_size_worker(link_key : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester, pg_conn : &'_ mut dbs::pg_pool::PgConnecter) -> Result<(),Box<dyn Error>> {
     redis_conn.set_app_name("collect_dbsize")?;
