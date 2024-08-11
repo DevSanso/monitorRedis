@@ -29,7 +29,10 @@ macro_rules! utils_inherit_error {
         {
             use core::errs;
             use core::func;
-            Err(Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}] : {}, {}", func!(), file!(), line!(), $msg, $source_err.to_string()))))
+            let mut temp = Box::new(errs::$category::$err_structure::new(format!("{} [{}:{}] : {}", func!(), file!(), line!(), $msg)));
+            let temp2 = $source_err;
+            temp.push_message(&temp2);
+            Err(temp)
         }
     };
 }

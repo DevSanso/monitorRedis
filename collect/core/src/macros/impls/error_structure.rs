@@ -1,14 +1,17 @@
 
-
 macro_rules! impl_error {
     ($category:ident ,$name : ident, $message:expr, $descr : expr) => {
         
         #[derive(Debug)]
-        pub struct $name(&'static str, &'static str, String);
+        pub struct $name(&'static str /* message(description) */,  Vec<String> /* output list*/);
 
         impl Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}:{} => {}", stringify!($name), self.2, $message )
+                for item in &self.1 {
+                    write!(f, "{}\n",item)?;
+                }
+
+                std::fmt::Result::Ok(())
             }
         }
 
@@ -18,7 +21,7 @@ macro_rules! impl_error {
             }
         
             fn description(&self) -> &str {
-                $descr
+                self.0
             }
         
             fn cause(&self) -> Option<&dyn Error> {
@@ -28,7 +31,14 @@ macro_rules! impl_error {
 
         impl $name {
             pub fn new(sub_msg : String) -> Self {
-                $name(stringify!($category), $message, sub_msg)
+                let mut ret = $name($message, Vec::new());
+                ret.1.push(format!("{}:{}[{}] : {}",stringify!($category), stringify!($name), $message, sub_msg));
+
+                ret
+            }
+
+            pub fn push_message(&mut self, msg : &'_ dyn Display) {
+                self.1.push(format!("{}", msg));
             }
         }
 
