@@ -38,7 +38,7 @@ fn entry_point<T>(q : RawQ<T>, is_kill : Arc<Mutex<bool>>) where T : 'static + S
 
         let ret = item_some.1(item_some.0);   
         if let Err(x) = ret {
-            log::error!("{} - error[{}]", current().name().unwrap(), x);
+            log::error!("{} - error\n{}", current().name().unwrap(), x);
         }
     }
 }
