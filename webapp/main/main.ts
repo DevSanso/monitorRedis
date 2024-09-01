@@ -1,1 +1,3 @@
-import c from 'core'
+function test() {
+    console.log(hello);
+}
