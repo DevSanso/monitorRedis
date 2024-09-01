@@ -143,5 +143,25 @@
     },
     {
         "InsertInfoKeySpace" : ["INSERT INTO redis_info_keyspace(link_key, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)"]
+    },
+    {
+        "InsertInfoMemory" : ["INSERT INTO redis_info_memory( ",
+        " link_key, ",
+        " collect_time, ",
+        " used_memory, ",
+        " used_memory_rss, ",
+        " used_memory_peak ",
+        " used_memory_overhead, ",
+        " used_memory_dataset, ",
+        " allocator_allocated, ",
+        " used_memory_lua, ",
+        " used_memory_scripts, ",
+        " maxmemory, ",
+        " maxmemory_policy, ",
+        " mem_clients_slaves, ",
+        " mem_clients_normal, ",
+        " mem_aof_buffer, ",
+        " mem_allocator ",
+        " ) VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)"]
     }
 ]

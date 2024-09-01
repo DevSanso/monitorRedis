@@ -60,6 +60,7 @@ pub enum PgCommand {
     DeleteClusterNodes,
     InsertKeyUsageTopTenHundred,
     InsertInfoKeySpace,
+    InsertInfoMemory,
 }
 pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
@@ -77,6 +78,7 @@ pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>
         pg_commandline_map_internal.insert(PgCommand::DeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 ");
         pg_commandline_map_internal.insert(PgCommand::InsertKeyUsageTopTenHundred,"INSERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)");
         pg_commandline_map_internal.insert(PgCommand::InsertInfoKeySpace,"INSERT INTO redis_info_keyspace(link_key, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)");
+        pg_commandline_map_internal.insert(PgCommand::InsertInfoMemory,"INSERT INTO redis_info_memory(   link_key,   collect_time,   used_memory,   used_memory_rss,   used_memory_peak   used_memory_overhead,   used_memory_dataset,   allocator_allocated,   used_memory_lua,   used_memory_scripts,   maxmemory,   maxmemory_policy,   mem_clients_slaves,   mem_clients_normal,   mem_aof_buffer,   mem_allocator   ) VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)");
         pg_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]

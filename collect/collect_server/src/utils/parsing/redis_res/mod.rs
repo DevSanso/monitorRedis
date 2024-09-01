@@ -7,6 +7,7 @@ mod config_get_all;
 mod cluster_nodes;
 mod key_usage_top_ten_hundred;
 mod info_keyspace;
+mod info_memory;
 
 pub use client_list::parsing_client_list;
 pub use info_cpu::parsing_info_cpu;
@@ -17,3 +18,4 @@ pub use config_get_all::parsing_config_get_all;
 pub use cluster_nodes::parsing_cluster_nodes;
 pub use key_usage_top_ten_hundred::{parsing_key_usage_top_ten_hundred, KeyMemUsage};
 pub use info_keyspace::parsing_info_keyspace;
+pub use info_memory::parsing_info_memory;

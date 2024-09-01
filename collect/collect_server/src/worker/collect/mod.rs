@@ -14,6 +14,7 @@ mod ping_status_worker;
 mod cluster_nodes_worker;
 mod key_usage_top_one_hundred_worker;
 mod info_keyspace_worker;
+mod info_memory_worker;
 
 macro_rules! register_worker_list {
     ($m : expr, $name: expr, $interval : expr, $func : expr) => {
@@ -33,5 +34,6 @@ pub fn make_one_collect_worker() -> HashMap<&'static str, (Duration, WorkerFn)> 
     register_worker_list!(m, "PingStatus", 20, ping_status_worker::ping_status_worker);
     register_worker_list!(m, "ClusterNodes", 60, cluster_nodes_worker::cluster_nodes_worker);
     register_worker_list!(m, "KeyusageTop1000", 3600, key_usage_top_one_hundred_worker::key_usage_top_ten_hundred_worker);
+    register_worker_list!(m, "InfoMemory", 10, info_memory_worker::info_memory_worker);
     m
 }
