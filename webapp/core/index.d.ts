@@ -1,1 +1,0 @@
-declare function greet(greeting: string): void;

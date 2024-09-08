@@ -1,0 +1,12 @@
+{
+  "compilerOptions" : {
+    "target": "es2017",                           
+    "lib": ["ES2017", "WebWorker", "DOM"],
+    "module": "None",  
+     "outDir": "./_tmp",
+     "esModuleInterop": true,
+     "forceConsistentCasingInFileNames": true,
+     "strict": true,
+     "skipLibCheck": true 
+  }
+}
