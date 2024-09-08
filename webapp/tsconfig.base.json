@@ -1,0 +1,12 @@
+{
+    "include": ["./types/core.d.ts"],
+    "compilerOptions": {
+        "typeRoots" : [
+            "./types"
+          ],
+          "module": "None", 
+           "target": "es2017",    
+          "lib": ["ES2017", "DOM", "WebWorker"],  
+    }
+
+}

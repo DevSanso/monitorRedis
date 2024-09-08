@@ -1,5 +1,5 @@
 {
-  "name": "core",
+  "name": "mon_core",
   "version": "1.0.0",
   "scripts": {
     "build": "npx tsc -p ./tsconfig.js.json && npx tsc -p ./tsconfig.types.json"
@@ -7,9 +7,6 @@
   "author": "Sunken Ahn <devsanso@outlook.com>",
   "license": "Apache-2.0",
   "description": "",
-  "devDependencies": {
-    "tailwindcss": "^3.4.7"
-  },
   "types" : "./_tmp/index.d.ts",
   "main" : "./_tmp/index.js"
 }
