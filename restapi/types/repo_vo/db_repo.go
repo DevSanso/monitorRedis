@@ -6,3 +6,11 @@ type DbKeyMemUsage struct{
 	UsageByte int
 	ExpiredSec int
 }
+
+type DbKeySpaceInfo struct{
+	CollectTime string
+	DbName string
+	Keys int
+	Expired int
+	AvgTTL int
+}

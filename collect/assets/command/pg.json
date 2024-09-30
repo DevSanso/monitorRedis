@@ -95,6 +95,7 @@
         " link_key, ",
         " collect_time, ",
         " db_name, ",
+        " keys ",
         " expires, ",
         " avg_ttl ",
         " ) ",

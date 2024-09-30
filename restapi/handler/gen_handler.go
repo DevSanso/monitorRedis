@@ -53,12 +53,17 @@ func wrapperCustomHandler(fun CustomHandlerFunc, path string) http.HandlerFunc{
 	}
 }
 
+func registerRedisHandler(impl *handlerImpl) {
+	impl.mux.HandleFunc("/data/redis/client", wrapperCustomHandler(clientHandler, "client"))
+	impl.mux.HandleFunc("/data/redis/server", wrapperCustomHandler(serverHandler, "server"))
+	impl.mux.HandleFunc("/data/redis/db", wrapperCustomHandler(dbHandler, "db"))
+}
+
 func NewHandler() http.Handler {
 	impl := new(handlerImpl)
 	
-	impl.mux.HandleFunc("/redis/client", wrapperCustomHandler(clientHandler, "client"))
-	impl.mux.HandleFunc("/redis/server", wrapperCustomHandler(serverHandler, "server"))
-	impl.mux.HandleFunc("/redis/db", wrapperCustomHandler(dbHandler, "db"))
+	registerRedisHandler(impl)
+
 	return impl
 }
 

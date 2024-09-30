@@ -19,6 +19,8 @@ func dbHandler(r *http.Request) *core.ApplicationResponse {
 	switch action {
 	case "keyTopUsage":
 		res = service.TopkeyUsage(r)
+	case "KeyUsage":
+		res = service.KeySpaceInfo(r)
 	default:
 		res = &core.ApplicationResponse{
 			Response: []byte("bad request"),

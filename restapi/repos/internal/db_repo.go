@@ -22,3 +22,20 @@ func DbRepoGenKeyTopUsage(rows *sql.Rows) ([]repo_vo.DbKeyMemUsage, error) {
 	}
 	return ret,nil
 }
+
+func DbRepoGenKeySpaceInfo(rows *sql.Rows) ([]repo_vo.DbKeySpaceInfo, error) {
+	ret := make([]repo_vo.DbKeySpaceInfo, 0)
+
+	for rows.Next() {
+		temp := repo_vo.DbKeySpaceInfo{}
+		
+		err := rows.Scan(&temp.DbName, &temp.CollectTime, &temp.Keys, &temp.Expired, &temp.AvgTTL)
+		
+		if err != nil {
+			return nil, err
+		}
+
+		ret = append(ret, temp)
+	}
+	return ret,nil
+}
