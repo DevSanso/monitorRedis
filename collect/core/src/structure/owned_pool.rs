@@ -95,12 +95,6 @@ impl<T,P> OwnedPool<T,P> where T : 'static, P: 'static {
     pub fn max_size(&self) -> usize {
         self.max_size
     }
-    pub fn free_all_alloc_item(&mut self) {
-        let mut g = self.state.lock().unwrap();
-        g.items.clear();
-        g.items.clear();
-        g.alloc_size = g.items.iter().count();
-    }
 
     fn new_alloc_if_len_zeros(&self, ps : Vec<P>) ->Result<Vec<T>,Box<dyn Error>> {
         let mut g = self.state.lock().unwrap();
@@ -140,11 +134,6 @@ impl<T,P> OwnedPool<T,P> where T : 'static, P: 'static {
         let item = self.new_alloc_if_len_zero(param)?;
         Ok(PoolItemOwned::new(item, self.clone()))
     }
-
-    pub fn clear(&mut self)  {
-        self.free_all_alloc_item();
-    }
-
 }
 
 impl<T,P> PoolCommander<T> for OwnedPool<T,P> {

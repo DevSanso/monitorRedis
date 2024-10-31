@@ -13,13 +13,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use std::error::Error;
 use core::utils_new_error;
-
+use log::info;
 
 use logger::{init_logger, LoggerConfig};
 use args::Args;
 
 fn main() -> Result<(), Box<dyn Error>>{
-    #[cfg(not(feature = "runTest"))]
     let args_opt = Args::new();
 
     if args_opt.is_none() {
@@ -36,6 +35,9 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     init_logger(log_cfgs)?;
 
+    let server_type = args.server_type.clone();
+    let server_id = args.server_id.clone();
+
     global::init_global(args)?;
 
     let shutdown = Arc::new(AtomicBool::new(false));
@@ -43,9 +45,10 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     loop {
         if !shutdown.load(Ordering::Relaxed) {
-
+            info!("shutdown collect --server-type {} --server_id {}", server_type, server_id);
             break;
         }
+
     }
 
     Ok(())
