@@ -1,24 +1,22 @@
 [
     {
-        "ClientList":[
+        "RedisClientList":[
             " INSERT INTO redis_client_list ",
-            " (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd, \\\"user\\\") ",
+            " (server_id, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd, \\\"user\\\") ",
             " VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) "]
     },
     {
-        "InfoCpu" : [" INSERT INTO redis_info_cpu ( ",
-        " link_key, ",
+        "CommonCpu" : [" INSERT INTO comm_cpu ( ",
+        " server_id, ",
         " collect_time, ",
-        " used_cpu_sys, ",
-        " used_cpu_user, ",
-        " used_cpu_sys_children, ",
-        " used_cpu_user_children, ",
+        " cpu_user",
+        " cpu_sys",
         " uptime ",
-        ") VALUES ( $1, now(), $2, $3, $4, $5, $6) "]
+        ") VALUES ( $1, now(), $2, $3) "]
     },
     {
-        "InfoStat" : [	" INSERT INTO redis_info_stats ( ",
-        " link_key, ",
+        "RedisInfoStat" : [	" INSERT INTO redis_info_stats ( ",
+        " server_id, ",
         " collect_time, ",
 		" total_connections_received, ",
 		" total_commands_processed, ",
@@ -47,15 +45,15 @@
 	" ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) "]
     },
 	{
-        "DbSize" : [" INSERT INTO redis_dbsize ( ",
-        " link_key, ",
+        "RedisDbSize" : [" INSERT INTO redis_dbsize ( ",
+        " server_id, ",
         " collect_time, ",
         " db_size ",
         ") VALUES ( $1, now(), $2) "]
     },
     {
-        "InfoCommandStats" : [" INSERT INTO redis_info_commandstats( ",
-        " link_key, ",
+        "RedisInfoCommandStats" : [" INSERT INTO redis_info_commandstats( ",
+        " server_id, ",
         " collect_time, ",
         " cmd, ",
         " calls, ",
@@ -64,35 +62,35 @@
         ") VALUES ( $1, now(), $2, $3, $4, $5) "]
     },
     {
-        "ConfigAll" : [" INSERT INTO redis_config_all( ",
-        " link_key, ",
+        "CommonConfigAll" : [" INSERT INTO comm_config_all( ",
+        " server_id, ",
         " sync_time, ",
         " name, ",
         " value )",
         " VALUES ( ",
         " $1, now(), $2, $3 )",
-        " ON CONFLICT(link_key, name, sync_time) ",
+        " ON CONFLICT(server_id, name, sync_time) ",
         " DO UPDATE ",
         " sync_time = now(), ",
         " value = $3 "
         ]
     },
     {
-        "PingUpdate" : [" INSERT INTO redis_ping_status( ",
-        " link_key, ",
+        "RedisPingUpdate" : [" INSERT INTO redis_ping_status( ",
+        " server_id, ",
         " sync_time, ",
         " status )",
         " VALUES ( ",
         " $1, now(), $2)",
-        " ON CONFLICT(link_key) ",
+        " ON CONFLICT(server_id) ",
         " DO UPDATE ",
         " sync_time = now(), ",
         " status = $2"
         ]
     },
     {
-        "KeySpace" : [" INSERT INTO redis_key_space( ",
-        " link_key, ",
+        "RedisKeySpace" : [" INSERT INTO redis_key_space( ",
+        " server_id, ",
         " collect_time, ",
         " db_name, ",
         " keys ",
@@ -103,8 +101,8 @@
         ]
     },
     {
-        "SyncClusterNodes" : [" INSERT INTO redis_cluster_nodes ( ",
-        " link_key, ",
+        "RedisSyncClusterNodes" : [" INSERT INTO redis_cluster_nodes ( ",
+        " server_id, ",
         " sync_time, ",
         " node_id, ",
         " ip, ",
@@ -116,7 +114,7 @@
         " connected_state, ",
         " slots ) ",
         " VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10) ",
-        " ON CONFLICT(link_key, node_id, ip) DO UPDATE SET ",
+        " ON CONFLICT(server_id, node_id, ip) DO UPDATE SET ",
         " port = $4, ",
         " cluster_port = $5, ",
         " type = $6, ",
@@ -127,8 +125,8 @@
         ]
     },
     {
-        "InsertClusterNodesPing" : [" INSERT INTO redis_cluster_nodes_ping ( ",
-        " link_key, ",
+        "RedisInsertClusterNodesPing" : [" INSERT INTO redis_cluster_nodes_ping ( ",
+        " server_id, ",
         " sync_time, ",
         " node_id, ",
         " ping_send, ",
@@ -137,17 +135,17 @@
         ]
     },
     {
-        "DeleteClusterNodes" : ["DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 "]
+        "RedisDeleteClusterNodes" : ["DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and server_id = $1 "]
     },
     {
-        "InsertKeyUsageTopTenHundred" : ["INSERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)"]
+        "RedisInsertKeyUsageTopTenHundred" : ["INSERT INTO redis_key_usage_mem(server_id, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)"]
     },
     {
-        "InsertInfoKeySpace" : ["INSERT INTO redis_info_keyspace(link_key, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)"]
+        "RedisInsertInfoKeySpace" : ["INSERT INTO redis_info_keyspace(server_id, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)"]
     },
     {
-        "InsertInfoMemory" : ["INSERT INTO redis_info_memory( ",
-        " link_key, ",
+        "RedisInsertInfoMemory" : ["INSERT INTO redis_info_memory( ",
+        " server_id, ",
         " collect_time, ",
         " used_memory, ",
         " used_memory_rss, ",

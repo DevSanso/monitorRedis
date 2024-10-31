@@ -46,48 +46,48 @@ pub static REIDS_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<RedisCommand, &'
         reids_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]
-pub enum PgCommand {
-    ClientList,
-    InfoCpu,
-    InfoStat,
-    DbSize,
-    InfoCommandStats,
-    ConfigAll,
-    PingUpdate,
-    KeySpace,
-    SyncClusterNodes,
-    InsertClusterNodesPing,
-    DeleteClusterNodes,
-    InsertKeyUsageTopTenHundred,
-    InsertInfoKeySpace,
-    InsertInfoMemory,
+pub enum CollectCommand {
+    RedisClientList,
+    CommonCpu,
+    RedisInfoStat,
+    RedisDbSize,
+    RedisInfoCommandStats,
+    CommonConfigAll,
+    RedisPingUpdate,
+    RedisKeySpace,
+    RedisSyncClusterNodes,
+    RedisInsertClusterNodesPing,
+    RedisDeleteClusterNodes,
+    RedisInsertKeyUsageTopTenHundred,
+    RedisInsertInfoKeySpace,
+    RedisInsertInfoMemory,
 }
-pub static PG_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<PgCommand, &'_ str>> =
+pub static COLLECT_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<CollectCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
-        let mut pg_commandline_map_internal = HashMap::new();
-        pg_commandline_map_internal.insert(PgCommand::ClientList," INSERT INTO redis_client_list   (link_key, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd, \"user\")   VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) ");
-        pg_commandline_map_internal.insert(PgCommand::InfoCpu," INSERT INTO redis_info_cpu (   link_key,   collect_time,   used_cpu_sys,   used_cpu_user,   used_cpu_sys_children,   used_cpu_user_children,   uptime  ) VALUES ( $1, now(), $2, $3, $4, $5, $6) ");
-        pg_commandline_map_internal.insert(PgCommand::InfoStat," INSERT INTO redis_info_stats (   link_key,   collect_time,   total_connections_received,   total_commands_processed,   instantaneous_ops_per_sec,   total_net_input_bytes,   total_net_output_bytes,   instantaneous_input_kbps,   instantaneous_output_kbps,   rejected_connections,   sync_full,   sync_partial_ok,   sync_partial_err,   expired_keys,   evicted_keys,   keyspace_hits,   keyspace_misses,   pubsub_channels,   pubsub_patterns,   latest_fork_usec,   migrate_cached_sockets,   slave_expires_tracked_keys,   active_defrag_hits,   active_defrag_misses,   active_defrag_key_hits,   active_defrag_key_misses   ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) ");
-        pg_commandline_map_internal.insert(PgCommand::DbSize," INSERT INTO redis_dbsize (   link_key,   collect_time,   db_size  ) VALUES ( $1, now(), $2) ");
-        pg_commandline_map_internal.insert(PgCommand::InfoCommandStats," INSERT INTO redis_info_commandstats(   link_key,   collect_time,   cmd,   calls,   usec,   usec_per_call  ) VALUES ( $1, now(), $2, $3, $4, $5) ");
-        pg_commandline_map_internal.insert(PgCommand::ConfigAll," INSERT INTO redis_config_all(   link_key,   sync_time,   name,   value )  VALUES (   $1, now(), $2, $3 )  ON CONFLICT(link_key, name, sync_time)   DO UPDATE   sync_time = now(),   value = $3 ");
-        pg_commandline_map_internal.insert(PgCommand::PingUpdate," INSERT INTO redis_ping_status(   link_key,   sync_time,   status )  VALUES (   $1, now(), $2)  ON CONFLICT(link_key)   DO UPDATE   sync_time = now(),   status = $2");
-        pg_commandline_map_internal.insert(PgCommand::KeySpace," INSERT INTO redis_key_space(   link_key,   collect_time,   db_name,   expires,   avg_ttl   )   VALUES( $1, now(), $2, $3, $4, $5 ) ");
-        pg_commandline_map_internal.insert(PgCommand::SyncClusterNodes," INSERT INTO redis_cluster_nodes (   link_key,   sync_time,   node_id,   ip,   port,   cluster_port,   type,   master_node,   ping_epoch,   connected_state,   slots )   VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10)   ON CONFLICT(link_key, node_id, ip) DO UPDATE SET   port = $4,   cluster_port = $5,   type = $6,   master_node = $7,   ping_epoch = $8,   connected_state = $9,   slots = $10 ");
-        pg_commandline_map_internal.insert(PgCommand::InsertClusterNodesPing," INSERT INTO redis_cluster_nodes_ping (   link_key,   sync_time,   node_id,   ping_send,   ping_recv )   VALUES($1, now(), $2, $3, $4 ) ");
-        pg_commandline_map_internal.insert(PgCommand::DeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and link_key = $1 ");
-        pg_commandline_map_internal.insert(PgCommand::InsertKeyUsageTopTenHundred,"INSERT INTO redis_key_usage_mem(link_key, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)");
-        pg_commandline_map_internal.insert(PgCommand::InsertInfoKeySpace,"INSERT INTO redis_info_keyspace(link_key, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)");
-        pg_commandline_map_internal.insert(PgCommand::InsertInfoMemory,"INSERT INTO redis_info_memory(   link_key,   collect_time,   used_memory,   used_memory_rss,   used_memory_peak   used_memory_overhead,   used_memory_dataset,   allocator_allocated,   used_memory_lua,   used_memory_scripts,   maxmemory,   maxmemory_policy,   mem_clients_slaves,   mem_clients_normal,   mem_aof_buffer,   mem_allocator   ) VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)");
-        pg_commandline_map_internal
+        let mut collect_commandline_map_internal = HashMap::new();
+        collect_commandline_map_internal.insert(CollectCommand::RedisClientList," INSERT INTO redis_client_list   (server_id, collect_time, id, addr, fd, name, age, idle, flags, db, sub, psub, multi, qbuf, qbuf_free, obl, oll, omem, events, cmd, \"user\")   VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) ");
+        collect_commandline_map_internal.insert(CollectCommand::CommonCpu," INSERT INTO comm_cpu (   server_id,   collect_time,   cpu_user  cpu_sys  uptime  ) VALUES ( $1, now(), $2, $3) ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInfoStat," INSERT INTO redis_info_stats (   server_id,   collect_time,   total_connections_received,   total_commands_processed,   instantaneous_ops_per_sec,   total_net_input_bytes,   total_net_output_bytes,   instantaneous_input_kbps,   instantaneous_output_kbps,   rejected_connections,   sync_full,   sync_partial_ok,   sync_partial_err,   expired_keys,   evicted_keys,   keyspace_hits,   keyspace_misses,   pubsub_channels,   pubsub_patterns,   latest_fork_usec,   migrate_cached_sockets,   slave_expires_tracked_keys,   active_defrag_hits,   active_defrag_misses,   active_defrag_key_hits,   active_defrag_key_misses   ) VALUES ($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisDbSize," INSERT INTO redis_dbsize (   server_id,   collect_time,   db_size  ) VALUES ( $1, now(), $2) ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInfoCommandStats," INSERT INTO redis_info_commandstats(   server_id,   collect_time,   cmd,   calls,   usec,   usec_per_call  ) VALUES ( $1, now(), $2, $3, $4, $5) ");
+        collect_commandline_map_internal.insert(CollectCommand::CommonConfigAll," INSERT INTO comm_config_all(   server_id,   sync_time,   name,   value )  VALUES (   $1, now(), $2, $3 )  ON CONFLICT(server_id, name, sync_time)   DO UPDATE   sync_time = now(),   value = $3 ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisPingUpdate," INSERT INTO redis_ping_status(   server_id,   sync_time,   status )  VALUES (   $1, now(), $2)  ON CONFLICT(server_id)   DO UPDATE   sync_time = now(),   status = $2");
+        collect_commandline_map_internal.insert(CollectCommand::RedisKeySpace," INSERT INTO redis_key_space(   server_id,   collect_time,   db_name,   keys   expires,   avg_ttl   )   VALUES( $1, now(), $2, $3, $4, $5 ) ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisSyncClusterNodes," INSERT INTO redis_cluster_nodes (   server_id,   sync_time,   node_id,   ip,   port,   cluster_port,   type,   master_node,   ping_epoch,   connected_state,   slots )   VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10)   ON CONFLICT(server_id, node_id, ip) DO UPDATE SET   port = $4,   cluster_port = $5,   type = $6,   master_node = $7,   ping_epoch = $8,   connected_state = $9,   slots = $10 ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInsertClusterNodesPing," INSERT INTO redis_cluster_nodes_ping (   server_id,   sync_time,   node_id,   ping_send,   ping_recv )   VALUES($1, now(), $2, $3, $4 ) ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisDeleteClusterNodes,"DELETE FROM redis_cluster_nodes where now() - sync_time > '400 seconds' interval and server_id = $1 ");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInsertKeyUsageTopTenHundred,"INSERT INTO redis_key_usage_mem(server_id, collect_time, key_name, usage_byte, expired_sec) VALUES($1, now(), $2, $3, $4)");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInsertInfoKeySpace,"INSERT INTO redis_info_keyspace(server_id, collect_time, db_name, expires, avg_ttl) VALUES($1, now(), $2, $3, $4)");
+        collect_commandline_map_internal.insert(CollectCommand::RedisInsertInfoMemory,"INSERT INTO redis_info_memory(   server_id,   collect_time,   used_memory,   used_memory_rss,   used_memory_peak   used_memory_overhead,   used_memory_dataset,   allocator_allocated,   used_memory_lua,   used_memory_scripts,   maxmemory,   maxmemory_policy,   mem_clients_slaves,   mem_clients_normal,   mem_aof_buffer,   mem_allocator   ) VALUES($1, now(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)");
+        collect_commandline_map_internal
     });
 #[derive(Eq, PartialEq, Hash)]
-pub enum SQLiteCommand {
+pub enum ManageCommand {
     RedisConnInfo,
 }
-pub static SQLITE_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<SQLiteCommand, &'_ str>> =
+pub static MANAGE_COMMANDLINE_MAP: once_cell::sync::Lazy<HashMap<ManageCommand, &'_ str>> =
     once_cell::sync::Lazy::new(|| {
-        let mut sqlite_commandline_map_internal = HashMap::new();
-        sqlite_commandline_map_internal.insert(SQLiteCommand::RedisConnInfo," SELECT redis_id, username, password, dbname, ip, port FROM redis_conn where collect_yn = 'Y' ");
-        sqlite_commandline_map_internal
+        let mut manage_commandline_map_internal = HashMap::new();
+        manage_commandline_map_internal.insert(ManageCommand::RedisConnInfo," SELECT redis_id, username, password, dbname, ip, port FROM redis_conn where collect_yn = 'Y' ");
+        manage_commandline_map_internal
     });

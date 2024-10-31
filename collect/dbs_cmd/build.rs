@@ -12,11 +12,11 @@ fn get_redis_command_json_file() -> Vec<u8> {
 }
 
 fn get_pg_command_json_file() -> Vec<u8> {
-    include_bytes!("../assets/command/pg.json").to_vec()
+    include_bytes!("../assets/command/collect.json").to_vec()
 }
 
 fn get_sqlite_command_json_file() -> Vec<u8> {
-    include_bytes!("../assets/command/sqlite.json").to_vec()
+    include_bytes!("../assets/command/manage.json").to_vec()
 }
 
 fn write_link_submod(root_mod: &mut Vec<u8>, sub_mod: &'_ str) {
@@ -171,13 +171,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let redis_codes = get_redis_command_code()?;
     let pg_codes = get_rdb_command_code(
-        "PgCommand",
-        "PG_COMMANDLINE_MAP",
+        "CollectCommand",
+        "COllECT_COMMANDLINE_MAP",
         get_pg_command_json_file(),
     )?;
     let sqlite_codes = get_rdb_command_code(
-        "SQLiteCommand",
-        "SQLITE_COMMANDLINE_MAP",
+        "ManageCommand",
+        "MANAGE_COMMANDLINE_MAP",
         get_sqlite_command_json_file(),
     )?;
 
