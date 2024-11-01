@@ -1,12 +1,13 @@
 mod config;
 mod worker;
-mod threads;
 mod typed;
 mod db_info;
 mod utils;
 mod collector;
 mod global;
 mod args;
+mod executor;
+mod interval;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,6 +40,9 @@ fn main() -> Result<(), Box<dyn Error>>{
     let server_id = args.server_id.clone();
 
     global::init_global(args)?;
+
+    let execute = executor::ThreadExecutor::new();
+    execute.run_and_nonblocking(server_type.clone());
 
     let shutdown = Arc::new(AtomicBool::new(false));
     signal_hook::flag::register(signal_hook::consts::SIGUSR1, Arc::clone(&shutdown))?;

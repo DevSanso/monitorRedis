@@ -55,7 +55,7 @@ fn create_enum_code(enum_name: &str, list: &Vec<(String, String)>) -> String {
 
     ret.push_str(
         format!(
-            "#[derive(Eq, PartialEq, Hash)]\npub enum {} {{\n",
+            "#[derive(Eq, PartialEq, Hash, std::fmt::Debug, Clone)]\npub enum {} {{\n",
             enum_name
         )
         .as_str(),
@@ -70,6 +70,14 @@ fn create_enum_code(enum_name: &str, list: &Vec<(String, String)>) -> String {
     }
 
     ret.push_str("\n}");
+    ret.push_str(format!("
+        impl std::fmt::Display for {} {{
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {{
+                write!(f, \"{}\", self)
+            }}
+        }}", enum_name, "{:?}").as_str())
+    ;
+
     ret
 }
 

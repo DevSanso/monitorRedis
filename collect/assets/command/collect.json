@@ -11,8 +11,8 @@
         " collect_time, ",
         " cpu_user",
         " cpu_sys",
-        " uptime ",
-        ") VALUES ( $1, now(), $2, $3) "]
+        " cpu_idle",
+        ") VALUES ( $1, now(), $2, $3, $4) "]
     },
     {
         "RedisInfoStat" : [	" INSERT INTO redis_info_stats ( ",

@@ -10,7 +10,7 @@ mod info_keyspace;
 mod info_memory;
 
 pub use client_list::parsing_client_list;
-pub use info_cpu::parsing_info_cpu;
+pub use info_cpu::{parsing_info_cpu, InfoCpu};
 pub use info_stat::parsing_info_stat;
 pub use db_size::parsing_dbsize;
 pub use info_commandstats::parsing_info_commandstats;
