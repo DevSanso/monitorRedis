@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     signal_hook::flag::register(signal_hook::consts::SIGUSR1, Arc::clone(&shutdown))?;
 
     loop {
-        if !shutdown.load(Ordering::Relaxed) {
+        if shutdown.load(Ordering::Relaxed) {
             info!("shutdown collect --server-type {} --server_id {}", server_type, server_id);
             break;
         }

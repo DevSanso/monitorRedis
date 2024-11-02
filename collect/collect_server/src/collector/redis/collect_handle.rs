@@ -123,6 +123,7 @@ pub fn cluster_nodes_handle(server_id : i32, val : String) -> Result<(),Box<dyn 
     
     let sync_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisSyncClusterNodes).unwrap();
     let push_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisInsertClusterNodesPing).unwrap();
+    let delete_old_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisDeleteClusterNodes).unwrap();
 
     let mut collect_conn_item = {
         get_redis_global().pools.collect_pool.get_owned(())?
@@ -130,9 +131,9 @@ pub fn cluster_nodes_handle(server_id : i32, val : String) -> Result<(),Box<dyn 
 
     let collect_conn = collect_conn_item.get_value();
 
-    for node in nodes {
-        let mut trans = collect_conn.trans()?;
+    let mut trans = collect_conn.trans()?;
 
+    for node in nodes {
         let sync_ret = trans.execute(&sync_query, &[&server_id, &node.node_id.as_str(), &node.ip.as_str(),
             &node.port, &node.cport, &node.node_type.as_str(), &node.master_node, &node.ping_epoch, &node.connect_type.as_str(), &slot_pg_bind_value(node.slots.as_slice())]);
 
@@ -147,9 +148,16 @@ pub fn cluster_nodes_handle(server_id : i32, val : String) -> Result<(),Box<dyn 
             let _ = trans.rollback();
             return utils_inherit_error!(connection, CommandRunError, "push", push_ret.err().unwrap());
         }
-
-        let _ = trans.commit();
     }
+
+    let delete_ret = trans.execute(&delete_old_query, &[&server_id]);
+
+    if delete_ret.is_err() {
+        let _ = trans.rollback();
+        return utils_inherit_error!(connection, CommandRunError, "delete", delete_ret.err().unwrap());
+    }
+
+    let _ = trans.commit();
 
     Ok(())
 }
@@ -357,7 +365,7 @@ pub fn info_memory_handle(server_id : i32, val : String) -> Result<(),Box<dyn Er
         &mem.mem_aof_buffer,
         &mem.mem_allocator.as_str()])?;
 
-    collect_conn.execute(&comm_mem_query, &[&server_id, &mem.maxmemory, &mem.used_memory_rss, &(mem.maxmemory - mem.used_memory_rss)])?;
+    collect_conn.execute(&comm_mem_query, &[&server_id, &(mem.maxmemory / 1024), &(mem.used_memory_rss / 1024), &((mem.maxmemory - mem.used_memory_rss) / 1024)])?;
     Ok(())
 }
 

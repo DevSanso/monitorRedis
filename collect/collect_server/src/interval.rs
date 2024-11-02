@@ -9,7 +9,7 @@ pub fn get_redis_current_interval() -> Vec<RedisCommand> {
 
     if now_sec % 5 == 0 {
         v.push(RedisCommand::ClientList);
-        v.push(RedisCommand::InfoClients);
+        //v.push(RedisCommand::InfoClients);
     }
 
     if now_sec % 15 == 0 {
@@ -22,7 +22,7 @@ pub fn get_redis_current_interval() -> Vec<RedisCommand> {
         v.push(RedisCommand::InfoCommandStats);
         v.push(RedisCommand::GetDbSizeSelf);
         v.push(RedisCommand::GetClusterNodes);
-        v.push(RedisCommand::InfoServer);
+        //v.push(RedisCommand::InfoServer);
         v.push(RedisCommand::InfoStat);
     }
 

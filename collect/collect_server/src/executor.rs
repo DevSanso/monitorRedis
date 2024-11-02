@@ -25,7 +25,7 @@ macro_rules! check_cmd_run {
         {
             let is_run = $exec.run_flag.lock().unwrap();
             let val = is_run.get($c);
-            if val.is_some() || val.unwrap() == &true {
+            if val.is_some() && val.unwrap() == &true {
                 continue;
             }
         }
@@ -47,12 +47,14 @@ pub fn make_redis_thread_fn(run_f :&Arc<Mutex<HashMap<RedisCommand, bool>>>, ser
             let mut collector = args.0;
             let flag = args.1;
 
-            collector.run_collect()?;
+            let run_ret = collector.run_collect();
 
             {
                 let mut f = flag.lock().unwrap();
                 *f.get_mut(&collector.get_cmd()).unwrap() = false;
             }
+
+            run_ret?;
         }
         Ok(())
     })

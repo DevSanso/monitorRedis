@@ -5,7 +5,7 @@ use std::error::Error;
 use collect_handle::*;
 
 use crate::global::get_redis_global;
-use core::utils_new_error;
+use core::{utils_inherit_error, utils_new_error};
 use dbs_cmd::{RedisCommand, REIDS_COMMANDLINE_MAP};
 use dbs::redis_pool::RedisRequester;
 
@@ -62,12 +62,17 @@ impl crate::collector::Collector<dbs::redis_pool::RedisRequester, RedisCommand> 
 
         conn.set_app_name(format!("collect-{}", self.command).as_str())?;
 
-        if self.command == RedisCommand::GetMemoryKeyUsage3000Range && self.command == RedisCommand::Ping {
-            complex_run_cmd(self.server_id, conn, &self.command)?;
-            Ok(())
+        let run_res = if self.command == RedisCommand::GetMemoryKeyUsage3000Range && self.command == RedisCommand::Ping {
+            complex_run_cmd(self.server_id, conn, &self.command)
         }
         else {
-            simple_run_cmd(self.server_id, conn, &self.command)?;
+            simple_run_cmd(self.server_id, conn, &self.command)
+        };
+
+        if run_res.is_err() {
+            item.dispose();
+            utils_inherit_error!(connection, ConnectionApiCallError, format!("command : {}", self.command), run_res.unwrap_err())
+        }else {
             Ok(())
         }
     }

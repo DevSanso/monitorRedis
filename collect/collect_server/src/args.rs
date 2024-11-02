@@ -18,7 +18,7 @@ macro_rules! parse_arg {
             }
         } else {
             if $map.get($key).unwrap().1 {
-                eprintln!("need config key{}", $map.get($key).unwrap().0);
+                eprintln!("need config key:{}", $map.get($key).unwrap().0);
                 None 
             } else {
                 Some(String::new()) 
@@ -58,11 +58,11 @@ impl Args {
 
         let mut arg_descriptions = HashMap::new();
 
-        add_arg!(arg_descriptions, "--serverType", "server type", true);
+        add_arg!(arg_descriptions, "--server_type", "server type", true);
         add_arg!(arg_descriptions, "--server_id", "server id", true);
         add_arg!(arg_descriptions, "--log_level", "log level", true);
-        add_arg!(arg_descriptions, "--log_file_path", "log file path", true);
-        add_arg!(arg_descriptions, "--conf_path", "connection config path", false);
+        add_arg!(arg_descriptions, "--log_file_path", "log file path", false);
+        add_arg!(arg_descriptions, "--conf_path", "connection config path", true);
         add_arg!(arg_descriptions, "--help", "print help", false);
 
         if args.contains(&"--help".to_string()) {
@@ -74,10 +74,10 @@ impl Args {
 
         check_required_args_count(&args, &arg_descriptions);
 
-        this.server_type = parse_arg!(args, "--serverType", &arg_descriptions)?;
+        this.server_type = parse_arg!(args, "--server_type", &arg_descriptions)?;
         this.log_level = parse_arg!(args, "--log_level", &arg_descriptions)?;
-        this.log_file_path = parse_arg!(args, "--log_file_path", &arg_descriptions)?;
-        this.conf_path = parse_arg!(args, "--conn_path", &arg_descriptions)?;
+        this.log_file_path = parse_arg!(args, "--log_file_path", &arg_descriptions).or(Some("".to_string()))?;
+        this.conf_path = parse_arg!(args, "--conf_path", &arg_descriptions)?;
         let server_id_str = parse_arg!(args, "--server_id", &arg_descriptions)?;
 
         this.server_id = server_id_str.parse().unwrap_or_else(|_| {

@@ -11,14 +11,14 @@
         " collect_time, ",
         " cpu_user, ",
         " cpu_sys, ",
-        " cpu_idle, ",
+        " cpu_idle ",
         ") VALUES ( $1, now(), $2, $3, $4) "]
     },
     {
         "CommonMem" : [" INSERT INTO comm_mem ( ",
         " server_id, ",
         " collect_time, ",
-        " total, ",
+        " total_kb, ",
         " usage_kb, ",
         " free_kb ",
         ") VALUES ( $1, now(), $2, $3, $4) "]
@@ -78,8 +78,8 @@
         " value )",
         " VALUES ( ",
         " $1, now(), $2, $3 )",
-        " ON CONFLICT(server_id, name, sync_time) ",
-        " DO UPDATE ",
+        " ON CONFLICT(server_id, name) ",
+        " DO UPDATE SET ",
         " sync_time = now(), ",
         " value = $3 "
         ]
@@ -158,7 +158,7 @@
         " collect_time, ",
         " used_memory, ",
         " used_memory_rss, ",
-        " used_memory_peak ",
+        " used_memory_peak, ",
         " used_memory_overhead, ",
         " used_memory_dataset, ",
         " allocator_allocated, ",
