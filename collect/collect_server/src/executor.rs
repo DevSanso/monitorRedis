@@ -2,10 +2,9 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
-use std::ops::IndexMut;
 use log::error;
 
-use thread_pool::{TPool,TItem};
+use thread_pool::TPool;
 use dbs_cmd::RedisCommand;
 use crate::interval::get_redis_current_interval;
 use crate::collector::Collector;
@@ -48,7 +47,7 @@ pub fn make_redis_thread_fn(run_f :&Arc<Mutex<HashMap<RedisCommand, bool>>>, ser
             let mut collector = args.0;
             let flag = args.1;
 
-            collector.run_collect();
+            collector.run_collect()?;
 
             {
                 let mut f = flag.lock().unwrap();

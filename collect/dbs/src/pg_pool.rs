@@ -4,7 +4,7 @@ use std::sync::Arc;
 use postgres::{self, Row, Transaction};
 use log::*;
 
-use core::structure::owned_pool::{OwnedPool};
+use core::structure::owned_pool::OwnedPool;
 use core::utils_inherit_error;
 
 pub type PgPoolAlias =  Arc<OwnedPool<PgConnecter, ()>>;
@@ -58,15 +58,15 @@ impl PgRows {
     }
     pub fn get_f64_data(&self, row_idx : usize, col_idx : usize) {
         let r = self.rs.get(row_idx).unwrap();
-        let ret : f64 = r.try_get(col_idx).unwrap();
+        let _ret : f64 = r.try_get(col_idx).unwrap();
     }
     pub fn get_i64_data(&self, row_idx : usize, col_idx : usize) {
         let r = self.rs.get(row_idx).unwrap();
-        let ret : i64 = r.try_get(col_idx).unwrap();
+        let _ret : i64 = r.try_get(col_idx).unwrap();
     }
     pub fn get_str_data(&self, row_idx : usize, col_idx : usize) {
         let r = self.rs.get(row_idx).unwrap();
-        let ret : &str = r.try_get(col_idx).unwrap();
+        let _ret : &str = r.try_get(col_idx).unwrap();
     }
 }
 

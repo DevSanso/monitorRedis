@@ -19,12 +19,8 @@ fn get_sqlite_command_json_file() -> Vec<u8> {
     include_bytes!("../assets/command/manage.json").to_vec()
 }
 
-fn write_link_submod(root_mod: &mut Vec<u8>, sub_mod: &'_ str) {
-    write!(root_mod, "pub mod {};\n", sub_mod);
-}
-
 fn write_dep_module(root_mod: &mut Vec<u8>, third_mod_name: &'_ str) {
-    write!(root_mod, "use {};\n", third_mod_name);
+    let _ = write!(root_mod, "use {};\n", third_mod_name);
 }
 
 fn create_or_clean_mod_code(path: String) -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +29,7 @@ fn create_or_clean_mod_code(path: String) -> Result<(), Box<dyn std::error::Erro
         drop(f)
     }
 
-    let mut f = fs::OpenOptions::new()
+    let _f = fs::OpenOptions::new()
         .write(true)
         .truncate(true)
         .open(path.as_str())?;
@@ -116,7 +112,7 @@ fn create_static_hashmap(
     }
     init_func.push_str(format!("{}_internal \n}}", hashmap_name.to_lowercase()).as_str());
 
-    let mut lazy_new = format!("once_cell::sync::Lazy::new({})", init_func);
+    let lazy_new = format!("once_cell::sync::Lazy::new({})", init_func);
 
     ret.push_str(format!("{} = {};", define, lazy_new).as_str());
     ret

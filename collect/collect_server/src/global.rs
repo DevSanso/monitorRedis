@@ -67,7 +67,7 @@ pub fn init_global(arg : Args) -> Result<(), Box<dyn std::error::Error>> {
         create_redis_url(info.user.as_str(), info.password.as_str(), info.ip.as_str(), info.port, info.db_name), 10);
         
         unsafe {
-            REDIS_GLOBAL.set(Global {
+            let _ = REDIS_GLOBAL.set(Global {
                 args : arg,
                 pools : GlobalPool {
                     server_pool : redis_p,

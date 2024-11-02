@@ -1,14 +1,13 @@
 mod collect_handle;
 
 use std::error::Error;
-use std::collections::HashMap;
 
 use collect_handle::*;
 
 use crate::global::get_redis_global;
 use core::utils_new_error;
-use dbs_cmd::{RedisCommand, REIDS_COMMANDLINE_MAP, CollectCommand};
-use dbs::redis_pool::{RedisPoolAlias, RedisRequester};
+use dbs_cmd::{RedisCommand, REIDS_COMMANDLINE_MAP};
+use dbs::redis_pool::RedisRequester;
 
 pub struct RedisCollector {
     server_id : i32,

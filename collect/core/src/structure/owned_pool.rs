@@ -1,4 +1,3 @@
-use std::fmt::Pointer;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -57,10 +56,10 @@ impl<T> Drop for PoolItemOwned<T> {
 }
 pub(super) trait PoolCommander<T> {
     fn dispose(&self, item : T);
-    #[warn(dead_code)]
+    #[allow(dead_code)]
     fn disposes(&self, item : Vec<T>);
     fn restoration(&self, item : T);
-    #[warn(dead_code)]
+    #[allow(dead_code)]
     fn restorations(&self, item : Vec<T>);
 }
 
