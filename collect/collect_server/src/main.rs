@@ -1,5 +1,4 @@
 mod config;
-mod worker;
 mod typed;
 mod db_info;
 mod utils;
@@ -28,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     let args = args_opt.unwrap();
 
-    let log_cfgs = vec![LoggerConfig::new(args.log_level.clone(), if args.log_file_path == "" {
+    let log_cfgs = vec![LoggerConfig::new(args.log_level.clone(), if args.log_file_path != "" {
         Some(args.log_file_path.clone())
     }else {
         None
@@ -53,6 +52,7 @@ fn main() -> Result<(), Box<dyn Error>>{
             break;
         }
 
+        std::thread::sleep(std::time::Duration::from_secs(10));
     }
 
     Ok(())

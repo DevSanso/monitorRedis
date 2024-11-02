@@ -9,9 +9,18 @@
         "CommonCpu" : [" INSERT INTO comm_cpu ( ",
         " server_id, ",
         " collect_time, ",
-        " cpu_user",
-        " cpu_sys",
-        " cpu_idle",
+        " cpu_user, ",
+        " cpu_sys, ",
+        " cpu_idle, ",
+        ") VALUES ( $1, now(), $2, $3, $4) "]
+    },
+    {
+        "CommonMem" : [" INSERT INTO comm_mem ( ",
+        " server_id, ",
+        " collect_time, ",
+        " total, ",
+        " usage_kb, ",
+        " free_kb ",
         ") VALUES ( $1, now(), $2, $3, $4) "]
     },
     {
@@ -76,7 +85,7 @@
         ]
     },
     {
-        "RedisPingUpdate" : [" INSERT INTO redis_ping_status( ",
+        "CommonPingUpdate" : [" INSERT INTO comm_ping_status( ",
         " server_id, ",
         " sync_time, ",
         " status )",

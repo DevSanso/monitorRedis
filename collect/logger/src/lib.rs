@@ -1,5 +1,5 @@
 use simplelog::*;
-use log::*;
+
 pub struct LoggerConfig {
     level : String,
     path : Option<String>

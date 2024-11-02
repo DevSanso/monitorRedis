@@ -1,7 +1,6 @@
-use std::fmt::Pointer;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
 use std::error::Error;
 
 use crate::macros::utils_new_error_crate;

@@ -1,7 +1,6 @@
 use std::sync::{Arc,Mutex};
 use std::thread::{self, current};
 use std::time::Duration;
-use std::slice::Iter;
 
 use log;
 

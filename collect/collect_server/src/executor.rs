@@ -94,7 +94,8 @@ impl ThreadExecutor {
                 ThreadExecutor::redis_run_and_blocking(clone);
             }
             else {
-                error!("{}", utils_new_error!(proc, CriticalError, format!("{} is not support", server_type)));
+                let err_msg: Result<(), Box<core::errs::proc::CriticalError>> = utils_new_error!(proc, CriticalError, format!("{} is not support", server_type));
+                error!("{}", err_msg.unwrap_err());
             }
         });
     }

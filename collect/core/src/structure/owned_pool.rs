@@ -57,8 +57,10 @@ impl<T> Drop for PoolItemOwned<T> {
 }
 pub(super) trait PoolCommander<T> {
     fn dispose(&self, item : T);
+    #[warn(dead_code)]
     fn disposes(&self, item : Vec<T>);
     fn restoration(&self, item : T);
+    #[warn(dead_code)]
     fn restorations(&self, item : Vec<T>);
 }
 

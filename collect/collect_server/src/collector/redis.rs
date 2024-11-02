@@ -26,7 +26,13 @@ fn simple_run_cmd(server_id : i32, conn : &'_ mut RedisRequester, command : &'_ 
         RedisCommand::GetAllConfig => config_get_all_handle(server_id, res),
         RedisCommand::GetDbSizeSelf => db_size_handle(server_id, res),
         RedisCommand::InfoStat => info_stats_handle(server_id, res),
-        _ => utils_new_error!(proc, CriticalError, format!("unkown command handle : {}", command.to_string()))
+        RedisCommand::InfoCommandStats => info_commandstats_handle(server_id,res),
+        RedisCommand::InfoMemory => info_memory_handle(server_id, res),
+        RedisCommand::InfoKeySpace => info_keyspace_handle(server_id, res),
+        _ => {
+            let err : Result<(), Box<dyn Error>>= utils_new_error!(proc, CriticalError, format!("unkown command handle : {}", command.to_string()));
+            err
+        }
     }?;
 
     Ok(())
@@ -37,7 +43,11 @@ fn complex_run_cmd(server_id : i32, conn : &'_ mut RedisRequester, command : &'_
     
     match command {
         RedisCommand::GetMemoryKeyUsage3000Range => key_usage_top_ten_hundred_handle(server_id, conn, cmd),
-        _ => utils_new_error!(proc, CriticalError, format!("unkown command handle : {}", command.to_string()))
+        RedisCommand::Ping => ping_status_handle(server_id, conn),
+        _ => {
+            let err : Result<(), Box<dyn Error>>= utils_new_error!(proc, CriticalError, format!("unkown command handle : {}", command.to_string()));
+            err
+        }
         
     }?;
     Ok(())
@@ -53,7 +63,7 @@ impl crate::collector::Collector<dbs::redis_pool::RedisRequester, RedisCommand> 
 
         conn.set_app_name(format!("collect-{}", self.command).as_str())?;
 
-        if self.command == RedisCommand::GetMemoryKeyUsage3000Range {
+        if self.command == RedisCommand::GetMemoryKeyUsage3000Range && self.command == RedisCommand::Ping {
             complex_run_cmd(self.server_id, conn, &self.command)?;
             Ok(())
         }

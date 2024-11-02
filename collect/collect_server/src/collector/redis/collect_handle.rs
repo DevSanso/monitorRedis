@@ -206,8 +206,7 @@ pub fn info_cpu_handle(server_id : i32, val : String) -> Result<(),Box<dyn Error
          &[&server_id, 
                 &make_pg_numeric(input.cpu_sys / input.total_sec as f64), 
                 &make_pg_numeric(input.cpu_user / input.total_sec as f64), 
-                &make_pg_numeric(input.child_cpu_sys / input.total_sec as f64), 
-                &make_pg_numeric(input.child_cpu_user / input.total_sec as f64)])?;
+                &make_pg_numeric(0.0)])?;
     Ok(())
 }
 
@@ -293,5 +292,126 @@ pub fn info_stats_handle(server_id : i32, val : String) -> Result<(),Box<dyn Err
         &c.active_defrag_misses,
         &c.active_defrag_key_hits,
         &c.active_defrag_key_misses])?;
+    Ok(())
+}
+
+pub fn info_commandstats_handle(server_id : i32, val : String) -> Result<(),Box<dyn Error>> {
+    let list = parsing_info_commandstats(val)?;
+    let mut stat_iter = list.iter();
+
+    let pg_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisInfoCommandStats).unwrap();
+
+    let mut collect_conn_item = {
+        get_redis_global().pools.collect_pool.get_owned(())?
+    };
+
+    let collect_conn = collect_conn_item.get_value();
+    
+    let mut t = collect_conn.trans()?;
+    
+    loop {
+        let seq = stat_iter.next();
+        if seq.is_none() {
+            let _ = t.commit();
+            break;
+        }
+
+        let stats = seq.unwrap();
+        let exec_ret = t.execute(&pg_query, &[&server_id, &stats.cmd, &stats.calls, &stats.usec, &stats.usec_per_call]);
+
+        if exec_ret.is_err() {
+            let _ = t.rollback();
+            return utils_inherit_error!(connection, CommandRunError, "commandstats", exec_ret.unwrap_err());
+        }
+    }
+
+    Ok(())
+}
+
+pub fn info_memory_handle(server_id : i32, val : String) -> Result<(),Box<dyn Error>> {
+    let mem = parsing_info_memory(val)?;
+
+    let redis_mem_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisInsertInfoMemory).unwrap();
+    let comm_mem_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::CommonMem).unwrap();
+
+    let mut collect_conn_item = {
+        get_redis_global().pools.collect_pool.get_owned(())?
+    };
+
+    let collect_conn = collect_conn_item.get_value();
+
+    collect_conn.execute(&redis_mem_query, &[
+        &server_id, 
+        &mem.used_memory, 
+        &mem.used_memory_rss, 
+        &mem.used_memory_peak, 
+        &mem.used_memory_overhead, 
+        &mem.used_memory_dataset,
+        &mem.allocator_allocated,
+        &mem.used_memory_lua,
+        &mem.used_memory_scripts,
+        &mem.maxmemory,
+        &mem.maxmemory_policy.as_str(),
+        &mem.mem_clients_slaves,
+        &mem.mem_clients_normal,
+        &mem.mem_aof_buffer,
+        &mem.mem_allocator.as_str()])?;
+
+    collect_conn.execute(&comm_mem_query, &[&server_id, &mem.maxmemory, &mem.used_memory_rss, &(mem.maxmemory - mem.used_memory_rss)])?;
+    Ok(())
+}
+
+
+pub fn info_keyspace_handle(server_id : i32, val : String) -> Result<(),Box<dyn Error>> {
+    let infos = parsing_info_keyspace(val)?;
+
+    let pg_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::RedisInsertInfoKeySpace).unwrap();
+
+    let mut collect_conn_item = {
+        get_redis_global().pools.collect_pool.get_owned(())?
+    };
+
+    let collect_conn = collect_conn_item.get_value();
+
+    let mut trans = collect_conn.trans()?;
+
+    for item in infos {
+        match trans.execute(&pg_query, &[&server_id, &item.db_name, &item.key_cnt, &item.expire_cnt, &item.avg_ttl]) {
+            Err(err) => {
+                let _ = trans.rollback();
+                return utils_inherit_error!(connection, CommandRunError, "", err)
+            }
+            Ok(_) => {}
+        }
+    }
+
+    let _ = trans.commit();
+
+    Ok(())
+}
+
+pub fn ping_status_handle(server_id : i32, redis_conn : &'_ mut dbs::redis_pool::RedisRequester) -> Result<(),Box<dyn Error>> {
+    use log::info;
+
+    let result = match redis_conn.ping() {
+        Ok(_) => true,
+        Err(err) =>  {
+            info!("ping_status_worker[{}] - ping command failed [{}]", server_id, err.to_string());
+            false
+        }
+    };
+
+    let pg_query = COLLECT_COMMANDLINE_MAP.get(&CollectCommand::CommonPingUpdate).unwrap();
+
+    let mut collect_conn_item = {
+        get_redis_global().pools.collect_pool.get_owned(())?
+    };
+
+    let collect_conn = collect_conn_item.get_value();
+
+    collect_conn.execute(&pg_query,
+         &[&server_id, if result {&"Y"} else {&"N"}])?;
+
+    
     Ok(())
 }
