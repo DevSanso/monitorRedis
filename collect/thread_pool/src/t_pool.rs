@@ -1,7 +1,6 @@
 use std::sync::{Arc,Mutex};
 use std::thread::{self, current};
 use std::time::Duration;
-use std::slice::Iter;
 
 use log;
 
@@ -23,7 +22,7 @@ fn is_kill_flag_on(is_kill : &Arc<Mutex<bool>>) -> bool {
 
 fn entry_point<T>(q : RawQ<T>, is_kill : Arc<Mutex<bool>>) where T : 'static + Send + Sync {
     loop {
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_millis(10));
         if is_kill_flag_on(&is_kill) { break; }
 
         let mut item : Option<TItem<T>> = None;

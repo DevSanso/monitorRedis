@@ -23,6 +23,8 @@ pub struct InfoCpu {
 
 #[inline]
 fn mapping_info_cpu(r : &mut InfoCpu, raw_data : &'_ str) -> Result<(), Box<dyn Error>> {
+    const UNSUPPORT_KEYS : &'static [&'static str]= &["used_cpu_sys_main_thread", "used_cpu_user_main_thread"];
+
     let s = split_colon_tuple(raw_data)?;
 
     match s.0 {
@@ -30,6 +32,10 @@ fn mapping_info_cpu(r : &mut InfoCpu, raw_data : &'_ str) -> Result<(), Box<dyn 
         "used_cpu_user" => r.cpu_user = s.1.trim().parse()?,
         "used_cpu_sys_children" => r.child_cpu_sys = s.1.trim().parse()?,
         "used_cpu_user_children" => r.child_cpu_user = s.1.trim().parse()?,
+        key if UNSUPPORT_KEYS.contains(&key) => {
+            log::debug!("not support {} this client list data", key);
+        },
+
         _ => return utils_new_error!(data, CantMappingKeyError, s.0)
     }
 

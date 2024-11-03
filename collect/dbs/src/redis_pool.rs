@@ -1,7 +1,7 @@
-use std::{any::Any, error::Error, fmt::Debug};
+use std::error::Error;
 use std::sync::Arc;
 
-use redis::{Client, Cmd, Commands, Connection, FromRedisValue, Value};
+use redis::{Client, Cmd, Connection, Value};
 
 use log::*;
 
@@ -157,7 +157,7 @@ impl RedisRequester {
         cmd.arg("SETNAME");
         cmd.arg(application_name);
 
-        let ret : Value = match cmd.query(&mut self.connection) {
+        let _ret : Value = match cmd.query(&mut self.connection) {
             Ok(ok) => ok,
             Err(err) => return utils_inherit_error!(connection, CommandRunError, "", err)
         };

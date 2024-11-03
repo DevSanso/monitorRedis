@@ -1,17 +1,11 @@
-use core::utils_inherit_error;
-use std::env;
-use std::fs;
 use std::error::Error;
-use std::io::Read;
-use std::thread;
-use std::time::Duration;
+use core::utils_inherit_error;
 
-use serde_json;
 use md5::{Md5, Digest};
 
 use core::structure::owned_pool::PoolItemOwned;
 use dbs::sqlite_pool::{SqliteRows,SqliteConn};
-use dbs_cmd::{SQLITE_COMMANDLINE_MAP, SQLiteCommand};
+use dbs_cmd::{MANAGE_COMMANDLINE_MAP, ManageCommand};
 
 use crate::typed::{RedisConnCfg, DbConnConfig};
 
@@ -32,7 +26,7 @@ fn get_fetch_redis_access_data(rows : SqliteRows) -> Result<Vec<RedisConnCfg>, B
         let result = hasher.finalize();
 
         let conn = RedisConnCfg {
-            link_id : id,
+            server_id : id,
             conn_cfg : DbConnConfig {
                 user : user,
                 password : password,
@@ -50,10 +44,10 @@ fn get_fetch_redis_access_data(rows : SqliteRows) -> Result<Vec<RedisConnCfg>, B
 }
 
 
-pub(crate) fn get_redis_access_datas(mut sqlite_item : PoolItemOwned<SqliteConn>) ->Result<Vec<RedisConnCfg>, Box<dyn Error>> {
+pub(crate) fn get_redis_access_datas(mut sqlite_item : PoolItemOwned<SqliteConn>, server_id : i32) ->Result<Vec<RedisConnCfg>, Box<dyn Error>> {
     let sql_conn = sqlite_item.get_value();
 
-    match sql_conn.query(SQLITE_COMMANDLINE_MAP.get(&SQLiteCommand::RedisConnInfo).unwrap().to_string(), &[], get_fetch_redis_access_data, "get_redis_access_datas") {
+    match sql_conn.query(MANAGE_COMMANDLINE_MAP.get(&ManageCommand::RedisConnInfo).unwrap().to_string(), &[&server_id], get_fetch_redis_access_data, "get_redis_access_datas") {
         Ok(ok) => Ok(ok),
         Err(err) => utils_inherit_error!(fetch, GetFailedError, "get_redis_access_datas", err)
     }
